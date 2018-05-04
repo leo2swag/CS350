@@ -289,6 +289,15 @@ cmd_quit(int nargs, char **args)
 	return 0;
 }
 
+static 
+int
+cmd_debug_msg(int nargs, char **args)
+{	
+	void(nargs)
+	void(args)
+	dbflags = DB_THREADS;
+	return 0;
+}
 /*
  * Command for mounting a filesystem.
  */
@@ -506,6 +515,7 @@ static const char *mainmenu[] = {
 #endif
 	"[kh] Kernel heap stats              ",
 	"[q] Quit and shut down              ",
+	"[dth] display debug messages    	 ",	
 	NULL
 };
 
@@ -549,6 +559,7 @@ static struct {
 	{ "q",		cmd_quit },
 	{ "exit",	cmd_quit },
 	{ "halt",	cmd_quit },
+	{ "dth",	cmd_debug_msg },
 
 #if OPT_SYNCHPROBS
 	/* in-kernel synchronization problem(s) */
