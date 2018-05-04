@@ -293,8 +293,8 @@ static
 int
 cmd_debug_msg(int nargs, char **args)
 {	
-	void(nargs)
-	void(args)
+	(void)nargs;
+	(void)args;
 	dbflags = DB_THREADS;
 	return 0;
 }
