@@ -446,6 +446,7 @@ static const char *opsmenu[] = {
 	"[sync]    Sync filesystems          ",
 	"[panic]   Intentional panic         ",
 	"[q]       Quit and shut down        ",
+	"[dth] 	  Display Debugging Messages ",	
 	NULL
 };
 
@@ -515,7 +516,6 @@ static const char *mainmenu[] = {
 #endif
 	"[kh] Kernel heap stats              ",
 	"[q] Quit and shut down              ",
-	"[dth] display debug messages    	 ",	
 	NULL
 };
 
