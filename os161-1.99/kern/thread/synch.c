@@ -193,6 +193,7 @@ lock_acquire(struct lock *lock)
 	}
 	lock->if_locked = true;
 	lock->cur_thread = curthread;
+	spinlock_release(&lock->lock_spin);
 }
 		
 
