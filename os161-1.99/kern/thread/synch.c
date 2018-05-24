@@ -163,7 +163,11 @@ lock_create(const char *name)
                 return NULL;
         }
         
-        // add stuff here as needed
+		lock->lock_wchan = wchan_create(name);
+		spinlock_init(lock->lock_spin);
+		lock->cur_thread = NULL;
+		lock->if_locked = false;
+
         
         return lock;
 }
