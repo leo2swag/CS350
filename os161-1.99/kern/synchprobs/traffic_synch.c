@@ -42,7 +42,7 @@ static struct lock *intersectionLock;
 static struct cv *intersectionCv;
 
 bool
-hit_happen(int check[]) 
+hit_happen(int volatile check[])
 {
 	int checkLen = sizeof(check);
 	for (int i = 0; i < checkLen; i++) {
@@ -102,7 +102,7 @@ intersection_no_hit(Direction origin, Direction destination) {
 			break;
 		case 1: //NE
 			//NE, NS, NW, EN, WS available
-			need_to_check = {ES,EW,SW,SN,SE,WN,WE};
+			int volatile need_to_check[7] = { ES,EW,SW,SN,SE,WN,WE };
 			if (hit_happen(need_to_check)) {
 				return false;
 			} else {
@@ -111,7 +111,7 @@ intersection_no_hit(Direction origin, Direction destination) {
 			}
 		case 2: //NS
 			//NE, NS, NW, SN, SE, EN available
-			need_to_check = {ES,EW,SW,WN,WE,WS};
+			int volatile need_to_check[6] = {ES,EW,SW,WN,WE,WS};
 			if (hit_happen(need_to_check)) {
 				return false;
 			} else {
@@ -120,7 +120,7 @@ intersection_no_hit(Direction origin, Direction destination) {
 			}
 		case 3: //NW
 			//NE, NS, NW, WN, NOT DESTINATION WITH WEST available
-			need_to_check = {SW,EW};
+			int volatile need_to_check[2] = {SW,EW};
 			if (hit_happen(need_to_check)) {
 				return false;
 			} else {
@@ -132,7 +132,7 @@ intersection_no_hit(Direction origin, Direction destination) {
 		switch (destination) {
 		case 0: //EN
 				//EN, ES, EW, NE, ALL OTHERS NOT HAVE NORTH AS DESTINATION  available
-			need_to_check = {SN,WN};
+			int volatile need_to_check[2] = {SN,WN};
 			if (hit_happen(need_to_check)) {
 				return false;
 			} else {
@@ -145,7 +145,7 @@ intersection_no_hit(Direction origin, Direction destination) {
 
 		case 2: //ES
 				//EN, ES, EW, SE, NW available
-			need_to_check = {NE,NS,SW,SN,WN,WE,WS};
+			int volatile need_to_check [7]= {NE,NS,SW,SN,WN,WE,WS};
 			if (hit_happen(need_to_check)) {
 				return false;
 			} else {
@@ -154,7 +154,7 @@ intersection_no_hit(Direction origin, Direction destination) {
 			}
 		case 3: //EW
 				//EN, ES, EW, WE, EN, WS, SE available
-			need_to_check = {NE,NS,NW,SW,SN,WN};
+			int volatile need_to_check[6] = {NE,NS,NW,SW,SN,WN};
 			if (hit_happen(need_to_check)) {
 				return false;
 			} else {
@@ -167,7 +167,7 @@ intersection_no_hit(Direction origin, Direction destination) {
 		switch (destination) {
 		case 0: //SN
 				//SN, SE, SW, NS, NW, SW, WS available
-			need_to_check = {NE,ES,EW,EN,WN,WE};
+			int volatile need_to_check[6] = {NE,ES,EW,EN,WN,WE};
 			if (hit_happen(need_to_check)) {
 				return false;
 			} else {
@@ -176,7 +176,7 @@ intersection_no_hit(Direction origin, Direction destination) {
 			}
 		case 1: //SE
 				//SN, SE, SW, ES, EN, NW, ALL NOT EAST DESTINATION available
-			need_to_check = {WE,NE};
+			int volatile need_to_check[2] = {WE,NE};
 			if (hit_happen(need_to_check)) {
 				return false;
 			} else {
@@ -189,7 +189,7 @@ intersection_no_hit(Direction origin, Direction destination) {
 
 		case 3: //SW
 				//SN, SE, SW, WS, EN, WS, SE available
-			need_to_check = {NE,NS,NW,ES,EW,WN,WE};
+			int volatile need_to_check[7] = {NE,NS,NW,ES,EW,WN,WE};
 			if (hit_happen(need_to_check)) {
 				return false;
 			} else {
@@ -202,7 +202,7 @@ intersection_no_hit(Direction origin, Direction destination) {
 		switch (destination) {
 		case 0: //WN
 				//WN, WS, WE, NW, WS, SE available
-			need_to_check = { NE,NS,ES,EW,EN,SW,SN };
+			int volatile need_to_check[7] = { NE,NS,ES,EW,EN,SW,SN };
 			if (hit_happen(need_to_check)) {
 				return false;
 			}
@@ -212,7 +212,7 @@ intersection_no_hit(Direction origin, Direction destination) {
 			}
 		case 1: //WE
 				//WN, WS, WE, EW, EN, NW, WS available
-			need_to_check = { NE,NS,ES,SW,SN,SE };
+			int volatile need_to_check[6] = { NE,NS,ES,SW,SN,SE };
 			if (hit_happen(need_to_check)) {
 				return false;
 			}
@@ -222,7 +222,7 @@ intersection_no_hit(Direction origin, Direction destination) {
 			}
 		case 2: //WS
 				//WN, WS, WE, SW, NOT SOUTH DESTINATION available
-			need_to_check = { NS,ES };
+			int volatile need_to_check[2] = { NS,ES };
 			if (hit_happen(need_to_check)) {
 				return false;
 			}
