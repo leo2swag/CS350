@@ -17,7 +17,7 @@ static int volatile WN = 0;
 static int volatile WE = 0;
 static int volatile WS = 0;
 
-
+int volatile need_to_check[7];
 bool hit_happen(int volatile check[]);
 bool intersection_no_hit(Direction origin, Direction destination);
 void one_intersection_end(Direction origin, Direction destination);
@@ -96,7 +96,6 @@ intersection_sync_cleanup(void)
 
 bool
 intersection_no_hit(Direction origin, Direction destination) {
-	int volatile need_to_check[7];
 	if (origin == 0) { //N
 		
 		if (destination == 0) { //NN
