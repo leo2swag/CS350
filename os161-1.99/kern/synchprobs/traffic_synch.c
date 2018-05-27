@@ -101,42 +101,28 @@ intersection_no_hit(Direction origin, Direction destination) {
 		
 		if (destination == 0) { //NN
 			panic("input warning: from north to north");
-			//break;
+			return true;
 		}
 		else if (destination == 1) { //NE
 		 //NE, NS, NW, EN, WS available
 			int volatile need_to_check[7] = { ES,EW,SW,SN,SE,WN,WE };
-			//need_to_check[0] = ES;
-			//need_to_check[1] = EW;
-			//need_to_check[2] = SW;
-			//need_to_check[3] = SN;
-			//need_to_check[4] = SE;
-			//need_to_check[5] = WN;
-			//need_to_check[6] = WE;
-
 			if (hit_happen(need_to_check)) {
 				return false;
 			}
 			else {
 				NE++;
-				//break;
+				return true;
 			}
 		}
 		else if (destination == 2) { //NS
 		 //NE, NS, NW, SN, SE, EN available
 			int volatile need_to_check[6] = { ES,EW,SW,WN,WE,WS };
-			//need_to_check[0] = ES;
-			//need_to_check[1] = EW;
-			//need_to_check[2] = SW;
-			//need_to_check[3] = WN;
-			//need_to_check[4] = WE;
-			//need_to_check[5] = WS;
 			if (hit_happen(need_to_check)) {
 				return false;
 			}
 			else {
 				NS++;
-				//break;
+				return true;
 			}
 		} else if (destination == 3) { //NW
 			//NE, NS, NW, WN, NOT DESTINATION WITH WEST available
@@ -145,82 +131,86 @@ intersection_no_hit(Direction origin, Direction destination) {
 				return false;
 			} else {
 				NW++;
-				//break;
+				return true;
 			}
 		}
 	} else if (origin == 1) { //E
-		switch (destination) {
-		case 0: //EN
+		if (destination == 0) { //EN
 				//EN, ES, EW, NE, ALL OTHERS NOT HAVE NORTH AS DESTINATION  available
-			int volatile need_to_check[2] = {SN,WN};
+			int volatile need_to_check[2] = { SN,WN };
 			if (hit_happen(need_to_check)) {
 				return false;
-			} else {
+			}
+			else {
 				EN++;
-				break;
+				return true;
 			}
-		case 1: //EE
+		}
+		else if (destination == 1) {//EE
 			panic("input warning: from east to east");
-			break;
-
-		case 2: //ES
-				//EN, ES, EW, SE, NW available
-			int volatile need_to_check [7]= {NE,NS,SW,SN,WN,WE,WS};
+			return true;
+		}
+		else if (destination == 2) {//ES
+			 //EN, ES, EW, SE, NW available
+			int volatile need_to_check[7] = { NE,NS,SW,SN,WN,WE,WS };
 			if (hit_happen(need_to_check)) {
 				return false;
-			} else {
-				ES++;
-				break;
 			}
-		case 3: //EW
+			else {
+				ES++;
+				return true;
+			}
+		} else if (destination == 3) { //EW
 				//EN, ES, EW, WE, EN, WS, SE available
 			int volatile need_to_check[6] = {NE,NS,NW,SW,SN,WN};
 			if (hit_happen(need_to_check)) {
 				return false;
 			} else {
 				EW++;
-				break;
+				return true;
 			}
 		}
 
 	} else if (origin == 2) { //S
-		switch (destination) {
-		case 0: //SN
+		if (destination == 0) {//SN
 				//SN, SE, SW, NS, NW, SW, WS available
-			int volatile need_to_check[6] = {NE,ES,EW,EN,WN,WE};
+			int volatile need_to_check[6] = { NE,ES,EW,EN,WN,WE };
 			if (hit_happen(need_to_check)) {
 				return false;
-			} else {
+			}
+			else {
 				SN++;
-				break;
+				return true;
 			}
-		case 1: //SE
-				//SN, SE, SW, ES, EN, NW, ALL NOT EAST DESTINATION available
-			int volatile need_to_check[2] = {WE,NE};
+		}
+		else if (destination == 1) {//SE
+			 //SN, SE, SW, ES, EN, NW, ALL NOT EAST DESTINATION available
+			int volatile need_to_check[2] = { WE,NE };
 			if (hit_happen(need_to_check)) {
 				return false;
-			} else {
-				SE++;
-				break;
 			}
-		case 2: //SS
+			else {
+				SE++;
+				return true;
+			}
+		}
+		else if (destination == 2) { //SS
 			panic("input warning: from south to south");
-			break;
+			return true;
 
-		case 3: //SW
+		} else if (destination == 3) { //SW
 				//SN, SE, SW, WS, EN, WS, SE available
 			int volatile need_to_check[7] = {NE,NS,NW,ES,EW,WN,WE};
 			if (hit_happen(need_to_check)) {
 				return false;
 			} else {
 				SW++;
-				break;
+				return true;
 			}
 		}
 
 	} else { //W
-		switch (destination) {
-		case 0: //WN
+		if (destination == 0) { //WN
 				//WN, WS, WE, NW, WS, SE available
 			int volatile need_to_check[7] = { NE,NS,ES,EW,EN,SW,SN };
 			if (hit_happen(need_to_check)) {
@@ -228,34 +218,35 @@ intersection_no_hit(Direction origin, Direction destination) {
 			}
 			else {
 				WN++;
-				break;
+				return true;
 			}
-		case 1: //WE
-				//WN, WS, WE, EW, EN, NW, WS available
+		}
+		else if (destination == 1) { //WE
+			 //WN, WS, WE, EW, EN, NW, WS available
 			int volatile need_to_check[6] = { NE,NS,ES,SW,SN,SE };
 			if (hit_happen(need_to_check)) {
 				return false;
 			}
 			else {
 				WE++;
-				break;
+				return true;
 			}
-		case 2: //WS
-				//WN, WS, WE, SW, NOT SOUTH DESTINATION available
+		}
+		else if (destination == 2) { //WS
+			 //WN, WS, WE, SW, NOT SOUTH DESTINATION available
 			int volatile need_to_check[2] = { NS,ES };
 			if (hit_happen(need_to_check)) {
 				return false;
 			}
 			else {
 				WS++;
-				break;
+				return true;
 			}
-		case 3: //WW
+		} else if (destination == 3) { //WW
 			panic("input warning: from west to west");
-			break;
+			return true;
 		}
 	}
-	return true;
 }
 
 void
