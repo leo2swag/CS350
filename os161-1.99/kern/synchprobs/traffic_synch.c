@@ -17,6 +17,7 @@ static int volatile WN = 0;
 static int volatile WE = 0;
 static int volatile WS = 0;
 
+int volatile need_to_check[7];
 bool hit_happen(int volatile check[]);
 bool intersection_no_hit(Direction origin, Direction destination);
 void one_intersection_end(Direction origin, Direction destination);
@@ -94,7 +95,6 @@ intersection_sync_cleanup(void)
 
 bool
 intersection_no_hit(Direction origin, Direction destination) {
-	int volatile need_to_check[7];
 	if (origin == 0) { //N
 		switch (destination) {
 		case 0: //NN
@@ -102,7 +102,7 @@ intersection_no_hit(Direction origin, Direction destination) {
 			break;
 		case 1: //NE
 			//NE, NS, NW, EN, WS available
-			int volatile need_to_check[7] = { ES,EW,SW,SN,SE,WN,WE };
+			need_to_check[7] = { ES,EW,SW,SN,SE,WN,WE };
 			if (hit_happen(need_to_check)) {
 				return false;
 			} else {
@@ -111,7 +111,7 @@ intersection_no_hit(Direction origin, Direction destination) {
 			}
 		case 2: //NS
 			//NE, NS, NW, SN, SE, EN available
-			int volatile need_to_check[6] = {ES,EW,SW,WN,WE,WS};
+			need_to_check[6] = {ES,EW,SW,WN,WE,WS};
 			if (hit_happen(need_to_check)) {
 				return false;
 			} else {
@@ -120,7 +120,7 @@ intersection_no_hit(Direction origin, Direction destination) {
 			}
 		case 3: //NW
 			//NE, NS, NW, WN, NOT DESTINATION WITH WEST available
-			int volatile need_to_check[2] = {SW,EW};
+			need_to_check[2] = {SW,EW};
 			if (hit_happen(need_to_check)) {
 				return false;
 			} else {
