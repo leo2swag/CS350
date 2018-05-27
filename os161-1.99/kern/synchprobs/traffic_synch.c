@@ -102,7 +102,7 @@ intersection_no_hit(Direction origin, Direction destination) {
 			break;
 		case 1: //NE
 			//NE, NS, NW, EN, WS available
-			static int volatile need_to_check[7] = { ES,EW,SW,SN,SE,WN,WE };
+			(int volatile) need_to_check[7] = { ES,EW,SW,SN,SE,WN,WE };
 			if (hit_happen(need_to_check)) {
 				return false;
 			} else {
@@ -111,7 +111,7 @@ intersection_no_hit(Direction origin, Direction destination) {
 			}
 		case 2: //NS
 			//NE, NS, NW, SN, SE, EN available
-			static int volatile need_to_check[6] = {ES,EW,SW,WN,WE,WS};
+			(int volatile) need_to_check[6] = {ES,EW,SW,WN,WE,WS};
 			if (hit_happen(need_to_check)) {
 				return false;
 			} else {
@@ -120,7 +120,7 @@ intersection_no_hit(Direction origin, Direction destination) {
 			}
 		case 3: //NW
 			//NE, NS, NW, WN, NOT DESTINATION WITH WEST available
-			static int volatile need_to_check[2] = {SW,EW};
+			(int volatile) need_to_check[2] = {SW,EW};
 			if (hit_happen(need_to_check)) {
 				return false;
 			} else {
