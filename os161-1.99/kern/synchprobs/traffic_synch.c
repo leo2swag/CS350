@@ -4,6 +4,22 @@
 #include <synch.h>
 #include <opt-A1.h>
 
+static volatile int NE = 0;
+static volatile int NS = 0;
+static volatile int NW = 0;
+static volatile int ES = 0;
+static volatile int EW = 0;
+static volatile int EN = 0;
+static volatile int SW = 0;
+static volatile int SN = 0;
+static volatile int SE = 0;
+static volatile int WN = 0;
+static volatile int WE = 0;
+static volatile int WS = 0;
+
+bool hit_happen(int check[]);
+bool intersection_no_hit(Direction origin, Direction destination);
+void one_intersection_end(Direction origin, Direction destination);
 /* 
  * This simple default synchronization mechanism allows only vehicle at a time
  * into the intersection.   The intersectionSem is used as a a lock.
@@ -22,7 +38,21 @@
  * replace this with declarations of any synchronization and other variables you need here
  */
 static struct semaphore *intersectionSem;
+static struct lock *intersectionLock;
+static struct cv *intersectionCv;
 
+bool
+hit_happen(int check[]) 
+{
+	int checkLen = sizeof(check);
+	for (int i = 0; i < checkLen; i++) {
+		check_direction = check[i];
+		if (check_direction != 0) {
+			return true;
+		}
+	}
+	return false;
+}
 
 /* 
  * The simulation driver will call this function once before starting
@@ -34,14 +64,17 @@ static struct semaphore *intersectionSem;
 void
 intersection_sync_init(void)
 {
-  /* replace this default implementation with your own implementation */
-
-  intersectionSem = sem_create("intersectionSem",1);
-  if (intersectionSem == NULL) {
-    panic("could not create intersection semaphore");
-  }
-  return;
+	intersectionLock = lock_create("intersectionLock");
+	if (intersectionLock == NULL) {
+		panic("could not create intersection lock");
+	}
+	intersectionCv = cv_create("intersectionCv");
+	if (intersectionCv == NULL) {
+		panic("could not create intersection cv");
+	}
+	return;
 }
+
 
 /* 
  * The simulation driver will call this function once after
@@ -53,11 +86,198 @@ intersection_sync_init(void)
 void
 intersection_sync_cleanup(void)
 {
-  /* replace this default implementation with your own implementation */
-  KASSERT(intersectionSem != NULL);
-  sem_destroy(intersectionSem);
+	KASSERT(intersectionLock != NULL);
+	KASSERT(intersectionCv != NULL);
+	lock_destroy(intersectionLock);
+	cv_destroy(intersectionLock);
 }
 
+bool
+intersection_no_hit(Direction origin, Direction destination) {
+
+	if (origin == 0) { //N
+		switch (destination) {
+		case 1: //NE
+			//NE, NS, NW, EN, WS available
+			int volatile need_to_check[7] = {ES,EW,SW,SN,SE,WN,WE};
+			if (hit_happen(need_to_check)) {
+				return false;
+			} else {
+				NE++;
+				break;
+			}
+		case 2: //NS
+			//NE, NS, NW, SN, SE, EN available
+			int volatile need_to_check[6] = {ES,EW,SW,WN,WE,WS};
+			if (hit_happen(need_to_check)) {
+				return false;
+			} else {
+				NS++;
+				break;
+			}
+		case 3: //NW
+			//NE, NS, NW, WN, NOT DESTINATION WITH WEST available
+			int volatile need_to_check[2] = {SW,EW};
+			if (hit_happen(need_to_check)) {
+				return false;
+			} else {
+				NW++;
+				break;
+			}
+		}
+	} else if (origin == 1) { //E
+		switch (destination) {
+		case 0: //EN
+				//EN, ES, EW, NE, ALL OTHERS NOT HAVE NORTH AS DESTINATION  available
+			int volatile need_to_check[2] = {SN,WN};
+			if (hit_happen(need_to_check)) {
+				return false;
+			} else {
+				EN++;
+				break;
+			}
+		case 2: //ES
+				//EN, ES, EW, SE, NW available
+			int volatile need_to_check[7] = {NE,NS,SW,SN,WN,WE,WS};
+			if (hit_happen(need_to_check)) {
+				return false;
+			} else {
+				ES++;
+				break;
+			}
+		case 3: //EW
+				//EN, ES, EW, WE, EN, WS, SE available
+			int volatile need_to_check[6] = {NE,NS,NW,SW,SN,WN};
+			if (hit_happen(need_to_check)) {
+				return false;
+			} else {
+				EW++;
+				break;
+			}
+		}
+
+	} else if (origin == 2) { //S
+		switch (destination) {
+		case 0: //SN
+				//SN, SE, SW, NS, NW, SW, WS available
+			int volatile need_to_check[6] = {NE,ES,EW,EN,WN,WE};
+			if (hit_happen(need_to_check)) {
+				return false;
+			} else {
+				SN++;
+				break;
+			}
+		case 1: //SE
+				//SN, SE, SW, ES, EN, NW, ALL NOT EAST DESTINATION available
+			int volatile need_to_check[2] = {WE,NE};
+			if (hit_happen(need_to_check)) {
+				return false;
+			} else {
+				SE++;
+				break;
+			}
+		case 3: //SW
+				//SN, SE, SW, WS, EN, WS, SE available
+			int volatile need_to_check[7] = {NE,NS,NW,ES,EW,WN,WE};
+			if (hit_happen(need_to_check)) {
+				return false;
+			} else {
+				SW++;
+				break;
+			}
+		}
+
+	} else { //W
+		switch (destination) {
+		case 0: //WN
+				//WN, WS, WE, NW, WS, SE available
+			int volatile need_to_check[7] = {NE,NS,ES,EW,EN,SW,SN};
+			if (hit_happen(need_to_check)) {
+				return false;
+			} else {
+				WN++;
+				break;
+			}
+		case 1: //WE
+				//WN, WS, WE, EW, EN, NW, WS available
+			int volatile need_to_check[6] = {NE,NS,ES,SW,SN,SE};
+			if (hit_happen(need_to_check)) {
+				return false;
+			} else {
+				WE++;
+				break;
+			}
+		case 2: //WS
+				//WN, WS, WE, SW, NOT SOUTH DESTINATION available
+			int volatile need_to_check[2] = {NS,ES};
+			if (hit_happen(need_to_check)) {
+				return false;
+			} else {
+				WS++;
+				break;
+			}
+		}
+
+	}
+	return true;
+}
+
+void
+one_intersection_end(Direction origin, Direction destination) {
+	if (origin == 0) { //N
+		switch (destination)
+		{
+		case 1: //E
+			NE--;
+			break;
+		case 2: //S
+			NS--;
+			break;
+		case 3: //W
+			NW--;
+			break;
+		}
+	} else if (origin == 1) { //E
+		switch (destination)
+		{
+		case 0: //N
+			EN--;
+			break;
+		case 2: //S
+			ES--;
+			break;
+		case 3: //W
+			EW--;
+			break;
+		}
+	} else if (origin == 2) { //S
+		switch (destination)
+		{
+		case 0: //N
+			SN--;
+			break;
+		case 1: //E
+			SE--;
+			break;
+		case 3: //W
+			SW--;
+			break;
+		}
+	} else { //W
+		switch (destination)
+		{
+		case 0: //N
+			WN--;
+			break;
+		case 1: //E
+			WE--;
+			break;
+		case 2: //S
+			WS--;
+			break;
+		}
+	}
+}
 
 /*
  * The simulation driver will call this function each time a vehicle
@@ -75,11 +295,14 @@ intersection_sync_cleanup(void)
 void
 intersection_before_entry(Direction origin, Direction destination) 
 {
-  /* replace this default implementation with your own implementation */
-  (void)origin;  /* avoid compiler complaint about unused parameter */
-  (void)destination; /* avoid compiler complaint about unused parameter */
-  KASSERT(intersectionSem != NULL);
-  P(intersectionSem);
+	KASSERT(intersectionLock != NULL);
+	KASSERT(intersectionCv != NULL);
+	lock_acquire(intersectionLock);
+	while (!intersection_no_hit(origin, destination)) {
+		cv_wait(intersectionCv, intersectionLock);
+	}
+	cv_signal(intersectionCv, intersectionLock);
+	lock_release(intersectionLock);
 }
 
 
@@ -97,9 +320,10 @@ intersection_before_entry(Direction origin, Direction destination)
 void
 intersection_after_exit(Direction origin, Direction destination) 
 {
-  /* replace this default implementation with your own implementation */
-  (void)origin;  /* avoid compiler complaint about unused parameter */
-  (void)destination; /* avoid compiler complaint about unused parameter */
-  KASSERT(intersectionSem != NULL);
-  V(intersectionSem);
+	KASSERT(intersectionLock != NULL);
+	KASSERT(intersectionCv != NULL);
+	lock_acquire(intersectionLock);
+	one_intersection_end(origin, destination);
+	cv_signal(intersectionCv, intersectionLock);
+	lock_release(intersectionLock);
 }
