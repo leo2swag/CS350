@@ -101,7 +101,7 @@ intersection_no_hit(Direction origin, Direction destination) {
 		
 		if (destination == 0) { //NN
 			panic("input warning: from north to north");
-			break;
+			//break;
 		}
 		else if (destination == 1) { //NE
 		 //NE, NS, NW, EN, WS available
@@ -119,7 +119,7 @@ intersection_no_hit(Direction origin, Direction destination) {
 			}
 			else {
 				NE++;
-				break;
+				//break;
 			}
 		}
 		else if (destination == 2) { //NS
@@ -136,7 +136,7 @@ intersection_no_hit(Direction origin, Direction destination) {
 			}
 			else {
 				NS++;
-				break;
+				//break;
 			}
 		} else if (destination == 3) { //NW
 			//NE, NS, NW, WN, NOT DESTINATION WITH WEST available
@@ -145,7 +145,7 @@ intersection_no_hit(Direction origin, Direction destination) {
 				return false;
 			} else {
 				NW++;
-				break;
+				//break;
 			}
 		}
 	} else if (origin == 1) { //E
