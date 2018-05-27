@@ -387,6 +387,6 @@ intersection_after_exit(Direction origin, Direction destination)
 	one_intersection_end(origin, destination);
 	stop = false;
 	cv_signal(fintersectionCv, intersectionLock);
-	cv_broadcast(fintersectionCv, intersectionLock);
+	cv_broadcast(intersectionCv, intersectionLock);
 	lock_release(intersectionLock);
 }
