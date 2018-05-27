@@ -247,6 +247,7 @@ intersection_no_hit(Direction origin, Direction destination) {
 			return true;
 		}
 	}
+	return true;
 }
 
 void
