@@ -96,7 +96,7 @@ intersection_sync_cleanup(void)
 
 bool
 intersection_no_hit(Direction origin, Direction destination) {
-	//int volatile need_to_check[7];
+	int volatile need_to_check[7];
 	if (origin == 0) { //N
 		switch (destination) {
 		case 0: //NN
@@ -114,7 +114,7 @@ intersection_no_hit(Direction origin, Direction destination) {
 			//need_to_check[5] = WN;
 			//need_to_check[6] = WE;
 
-			if (hit_happen(need_to_check)) {
+			if (hit_happen(need_to_check[7])) {
 				return false;
 			} else {
 				NE++;
