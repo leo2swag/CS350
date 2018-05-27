@@ -38,7 +38,6 @@ void one_intersection_end(Direction origin, Direction destination);
 /*
  * replace this with declarations of any synchronization and other variables you need here
  */
-static struct semaphore *intersectionSem;
 static struct lock *intersectionLock;
 static struct cv *intersectionCv;
 
