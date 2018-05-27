@@ -17,7 +17,7 @@ static int volatile WN = 0;
 static int volatile WE = 0;
 static int volatile WS = 0;
 
-bool hit_happen(int check[]);
+bool hit_happen(int volatile check[]);
 bool intersection_no_hit(Direction origin, Direction destination);
 void one_intersection_end(Direction origin, Direction destination);
 /* 
