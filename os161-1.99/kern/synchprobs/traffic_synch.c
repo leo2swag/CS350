@@ -42,7 +42,7 @@ static struct lock *intersectionLock;
 static struct cv *intersectionCv;
 
 bool
-hit_happen(int check[])
+hit_happen(int volatile check[])
 {
 	int checkLen = sizeof(check);
 	for (int i = 0; i < checkLen; i++) {
