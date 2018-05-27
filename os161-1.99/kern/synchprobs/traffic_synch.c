@@ -17,6 +17,10 @@ static int volatile WN = 0;
 static int volatile WE = 0;
 static int volatile WS = 0;
 
+static bool stop = false;
+static Direction curorigin;
+static Direction curdestination;
+
 int volatile need_to_check[7];
 bool hit_happen(int volatile check[]);
 bool intersection_no_hit(Direction origin, Direction destination);
@@ -40,6 +44,7 @@ void one_intersection_end(Direction origin, Direction destination);
  */
 static struct lock *intersectionLock;
 static struct cv *intersectionCv;
+static struct cv *fintersectionCv;
 
 bool
 hit_happen(int volatile check[])
@@ -74,6 +79,10 @@ intersection_sync_init(void)
 	if (intersectionCv == NULL) {
 		panic("could not create intersection cv");
 	}
+	fintersectionCv = cv_create("fintersectionCv");
+	if (intersectionCv == NULL) {
+		panic("could not create fintersection cv");
+	}
 	return;
 }
 
@@ -90,8 +99,10 @@ intersection_sync_cleanup(void)
 {
 	KASSERT(intersectionLock != NULL);
 	KASSERT(intersectionCv != NULL);
+	KASSERT(fintersectionCv != NULL);
 	lock_destroy(intersectionLock);
 	cv_destroy(intersectionCv);
+	cv_destroy(fintersectionCv);
 }
 
 bool
@@ -336,11 +347,20 @@ intersection_before_entry(Direction origin, Direction destination)
 {
 	KASSERT(intersectionLock != NULL);
 	KASSERT(intersectionCv != NULL);
+	KASSERT(fintersectionCv != NULL);
 	lock_acquire(intersectionLock);
-	while (!intersection_no_hit(origin, destination)) {
-		cv_wait(intersectionCv, intersectionLock);
+	while ((!intersection_no_hit(origin, destination))||(stop && origin!=curorigin && destination!=curdestination)) {
+		if (stop == false) {
+			stop = true;
+			cv_wait(fintersectionCv, intersectionLock);
+		}
+		else {
+			cv_wait(intersectionCv, intersectionLock);
+		}
 	}
-	cv_signal(intersectionCv, intersectionLock);
+	//cv_signal(intersectionCv, intersectionLock);
+	curorigin = origin;
+	curdestination = destination;
 	lock_release(intersectionLock);
 }
 
@@ -361,8 +381,12 @@ intersection_after_exit(Direction origin, Direction destination)
 {
 	KASSERT(intersectionLock != NULL);
 	KASSERT(intersectionCv != NULL);
+	KASSERT(fintersectionCv != NULL);
+
 	lock_acquire(intersectionLock);
 	one_intersection_end(origin, destination);
-	cv_signal(intersectionCv, intersectionLock);
+	stop = false;
+	cv_signal(fintersectionCv, intersectionLock);
+	cv_broadcast(fintersectionCv, intersectionLock);
 	lock_release(intersectionLock);
 }
