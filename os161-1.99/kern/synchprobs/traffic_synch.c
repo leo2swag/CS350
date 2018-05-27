@@ -96,17 +96,24 @@ intersection_sync_cleanup(void)
 
 bool
 intersection_no_hit(Direction origin, Direction destination) {
-	int volatile need_to_check[7];
+	//int volatile need_to_check[7];
 	if (origin == 0) { //N
 		switch (destination) {
 		case 0: //NN
+			//int volatile need_to_check[] = {};
 			panic("input warning: from north to north");
 			break;
 		case 1: //NE
 			//NE, NS, NW, EN, WS available
-			//int volatile need_to_check[7] = { ES,EW,SW,SN,SE,WN,WE };
-			need_to_check[0] = ES;
-			need_to_check[1] = EW;
+			int volatile need_to_check[7] = { ES,EW,SW,SN,SE,WN,WE };
+			//need_to_check[0] = ES;
+			//need_to_check[1] = EW;
+			//need_to_check[2] = SW;
+			//need_to_check[3] = SN;
+			//need_to_check[4] = SE;
+			//need_to_check[5] = WN;
+			//need_to_check[6] = WE;
+
 			if (hit_happen(need_to_check)) {
 				return false;
 			} else {
@@ -116,6 +123,12 @@ intersection_no_hit(Direction origin, Direction destination) {
 		case 2: //NS
 			//NE, NS, NW, SN, SE, EN available
 			int volatile need_to_check[6] = {ES,EW,SW,WN,WE,WS};
+			//need_to_check[0] = ES;
+			//need_to_check[1] = EW;
+			//need_to_check[2] = SW;
+			//need_to_check[3] = WN;
+			//need_to_check[4] = WE;
+			//need_to_check[5] = WS;
 			if (hit_happen(need_to_check)) {
 				return false;
 			} else {
