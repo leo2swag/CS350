@@ -4,18 +4,18 @@
 #include <synch.h>
 #include <opt-A1.h>
 
-static volatile int NE = 0;
-static volatile int NS = 0;
-static volatile int NW = 0;
-static volatile int ES = 0;
-static volatile int EW = 0;
-static volatile int EN = 0;
-static volatile int SW = 0;
-static volatile int SN = 0;
-static volatile int SE = 0;
-static volatile int WN = 0;
-static volatile int WE = 0;
-static volatile int WS = 0;
+static int volatile NE = 0;
+static int volatile NS = 0;
+static int volatile NW = 0;
+static int volatile ES = 0;
+static int volatile EW = 0;
+static int volatile EN = 0;
+static int volatile SW = 0;
+static int volatile SN = 0;
+static int volatile SE = 0;
+static int volatile WN = 0;
+static int volatile WE = 0;
+static int volatile WS = 0;
 
 bool hit_happen(int check[]);
 bool intersection_no_hit(Direction origin, Direction destination);
@@ -46,7 +46,7 @@ hit_happen(int check[])
 {
 	int checkLen = sizeof(check);
 	for (int i = 0; i < checkLen; i++) {
-		check_direction = check[i];
+		int volatile check_direction = check[i];
 		if (check_direction != 0) {
 			return true;
 		}
@@ -89,17 +89,20 @@ intersection_sync_cleanup(void)
 	KASSERT(intersectionLock != NULL);
 	KASSERT(intersectionCv != NULL);
 	lock_destroy(intersectionLock);
-	cv_destroy(intersectionLock);
+	cv_destroy(intersectionCv);
 }
 
 bool
 intersection_no_hit(Direction origin, Direction destination) {
-
+	int volatile need_to_check[7];
 	if (origin == 0) { //N
 		switch (destination) {
+		case 0: //NN
+			panic("input warning: from north to north");
+			break;
 		case 1: //NE
 			//NE, NS, NW, EN, WS available
-			int volatile need_to_check[7] = {ES,EW,SW,SN,SE,WN,WE};
+			need_to_check = {ES,EW,SW,SN,SE,WN,WE};
 			if (hit_happen(need_to_check)) {
 				return false;
 			} else {
@@ -108,7 +111,7 @@ intersection_no_hit(Direction origin, Direction destination) {
 			}
 		case 2: //NS
 			//NE, NS, NW, SN, SE, EN available
-			int volatile need_to_check[6] = {ES,EW,SW,WN,WE,WS};
+			need_to_check = {ES,EW,SW,WN,WE,WS};
 			if (hit_happen(need_to_check)) {
 				return false;
 			} else {
@@ -117,7 +120,7 @@ intersection_no_hit(Direction origin, Direction destination) {
 			}
 		case 3: //NW
 			//NE, NS, NW, WN, NOT DESTINATION WITH WEST available
-			int volatile need_to_check[2] = {SW,EW};
+			need_to_check = {SW,EW};
 			if (hit_happen(need_to_check)) {
 				return false;
 			} else {
@@ -129,16 +132,20 @@ intersection_no_hit(Direction origin, Direction destination) {
 		switch (destination) {
 		case 0: //EN
 				//EN, ES, EW, NE, ALL OTHERS NOT HAVE NORTH AS DESTINATION  available
-			int volatile need_to_check[2] = {SN,WN};
+			need_to_check = {SN,WN};
 			if (hit_happen(need_to_check)) {
 				return false;
 			} else {
 				EN++;
 				break;
 			}
+		case 1: //EE
+			panic("input warning: from east to east");
+			break;
+
 		case 2: //ES
 				//EN, ES, EW, SE, NW available
-			int volatile need_to_check[7] = {NE,NS,SW,SN,WN,WE,WS};
+			need_to_check = {NE,NS,SW,SN,WN,WE,WS};
 			if (hit_happen(need_to_check)) {
 				return false;
 			} else {
@@ -147,7 +154,7 @@ intersection_no_hit(Direction origin, Direction destination) {
 			}
 		case 3: //EW
 				//EN, ES, EW, WE, EN, WS, SE available
-			int volatile need_to_check[6] = {NE,NS,NW,SW,SN,WN};
+			need_to_check = {NE,NS,NW,SW,SN,WN};
 			if (hit_happen(need_to_check)) {
 				return false;
 			} else {
@@ -160,7 +167,7 @@ intersection_no_hit(Direction origin, Direction destination) {
 		switch (destination) {
 		case 0: //SN
 				//SN, SE, SW, NS, NW, SW, WS available
-			int volatile need_to_check[6] = {NE,ES,EW,EN,WN,WE};
+			need_to_check = {NE,ES,EW,EN,WN,WE};
 			if (hit_happen(need_to_check)) {
 				return false;
 			} else {
@@ -169,16 +176,20 @@ intersection_no_hit(Direction origin, Direction destination) {
 			}
 		case 1: //SE
 				//SN, SE, SW, ES, EN, NW, ALL NOT EAST DESTINATION available
-			int volatile need_to_check[2] = {WE,NE};
+			need_to_check = {WE,NE};
 			if (hit_happen(need_to_check)) {
 				return false;
 			} else {
 				SE++;
 				break;
 			}
+		case 2: //SS
+			panic("input warning: from south to south");
+			break;
+
 		case 3: //SW
 				//SN, SE, SW, WS, EN, WS, SE available
-			int volatile need_to_check[7] = {NE,NS,NW,ES,EW,WN,WE};
+			need_to_check = {NE,NS,NW,ES,EW,WN,WE};
 			if (hit_happen(need_to_check)) {
 				return false;
 			} else {
@@ -191,33 +202,38 @@ intersection_no_hit(Direction origin, Direction destination) {
 		switch (destination) {
 		case 0: //WN
 				//WN, WS, WE, NW, WS, SE available
-			int volatile need_to_check[7] = {NE,NS,ES,EW,EN,SW,SN};
+			need_to_check = { NE,NS,ES,EW,EN,SW,SN };
 			if (hit_happen(need_to_check)) {
 				return false;
-			} else {
+			}
+			else {
 				WN++;
 				break;
 			}
 		case 1: //WE
 				//WN, WS, WE, EW, EN, NW, WS available
-			int volatile need_to_check[6] = {NE,NS,ES,SW,SN,SE};
+			need_to_check = { NE,NS,ES,SW,SN,SE };
 			if (hit_happen(need_to_check)) {
 				return false;
-			} else {
+			}
+			else {
 				WE++;
 				break;
 			}
 		case 2: //WS
 				//WN, WS, WE, SW, NOT SOUTH DESTINATION available
-			int volatile need_to_check[2] = {NS,ES};
+			need_to_check = { NS,ES };
 			if (hit_happen(need_to_check)) {
 				return false;
-			} else {
+			}
+			else {
 				WS++;
 				break;
 			}
+		case 3: //WW
+			panic("input warning: from west to west");
+			break;
 		}
-
 	}
 	return true;
 }
@@ -227,6 +243,9 @@ one_intersection_end(Direction origin, Direction destination) {
 	if (origin == 0) { //N
 		switch (destination)
 		{
+		case 0: //N
+			panic("input warning: from north to north");
+			break;
 		case 1: //E
 			NE--;
 			break;
@@ -242,6 +261,9 @@ one_intersection_end(Direction origin, Direction destination) {
 		{
 		case 0: //N
 			EN--;
+			break;
+		case 1: //E
+			panic("input warning: from east to east");
 			break;
 		case 2: //S
 			ES--;
@@ -259,6 +281,9 @@ one_intersection_end(Direction origin, Direction destination) {
 		case 1: //E
 			SE--;
 			break;
+		case 2: //S
+			panic("input warning: from south to south");
+			break;
 		case 3: //W
 			SW--;
 			break;
@@ -274,6 +299,9 @@ one_intersection_end(Direction origin, Direction destination) {
 			break;
 		case 2: //S
 			WS--;
+			break;
+		case 3: //W
+			panic("input warning: from west to west");
 			break;
 		}
 	}
