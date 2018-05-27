@@ -323,7 +323,7 @@ intersection_before_entry(Direction origin, Direction destination)
 	KASSERT(intersectionLock != NULL);
 	KASSERT(intersectionCv != NULL);
 	lock_acquire(intersectionLock);
-	while (!intersection_no_hit(origin, destination)) {
+	while (intersection_no_hit(origin, destination) == false) {
 		cv_wait(intersectionCv, intersectionLock);
 		
 	}
