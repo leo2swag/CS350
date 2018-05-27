@@ -17,8 +17,8 @@ static int volatile WN = 0;
 static int volatile WE = 0;
 static int volatile WS = 0;
 
-int volatile need_to_check[7];
-bool hit_happen(int volatile check[]);
+int need_to_check[7];
+bool hit_happen(int check[]);
 bool intersection_no_hit(Direction origin, Direction destination);
 void one_intersection_end(Direction origin, Direction destination);
 /* 
@@ -42,7 +42,7 @@ static struct lock *intersectionLock;
 static struct cv *intersectionCv;
 
 bool
-hit_happen(int volatile check[])
+hit_happen(int check[])
 {
 	int checkLen = sizeof(check);
 	for (int i = 0; i < checkLen; i++) {
@@ -104,7 +104,7 @@ intersection_no_hit(Direction origin, Direction destination) {
 		}
 		else if (destination == 1) { //NE
 		 //NE, NS, NW, EN, WS available
-			int volatile need_to_check[7] = { ES,EW,SW,SN,SE,WN,WE };
+			int need_to_check[7] = { ES,EW,SW,SN,SE,WN,WE };
 			if (hit_happen(need_to_check)) {
 				return false;
 			}
@@ -115,7 +115,7 @@ intersection_no_hit(Direction origin, Direction destination) {
 		}
 		else if (destination == 2) { //NS
 		 //NE, NS, NW, SN, SE, EN available
-			int volatile need_to_check[6] = { ES,EW,SW,WN,WE,WS };
+			int need_to_check[6] = { ES,EW,SW,WN,WE,WS };
 			if (hit_happen(need_to_check)) {
 				return false;
 			}
@@ -125,7 +125,7 @@ intersection_no_hit(Direction origin, Direction destination) {
 			}
 		} else if (destination == 3) { //NW
 			//NE, NS, NW, WN, NOT DESTINATION WITH WEST available
-			int volatile need_to_check[2] = {SW,EW};
+			int need_to_check[2] = {SW,EW};
 			if (hit_happen(need_to_check)) {
 				return false;
 			} else {
@@ -136,7 +136,7 @@ intersection_no_hit(Direction origin, Direction destination) {
 	} else if (origin == 1) { //E
 		if (destination == 0) { //EN
 				//EN, ES, EW, NE, ALL OTHERS NOT HAVE NORTH AS DESTINATION  available
-			int volatile need_to_check[2] = { SN,WN };
+			int need_to_check[2] = { SN,WN };
 			if (hit_happen(need_to_check)) {
 				return false;
 			}
@@ -151,7 +151,7 @@ intersection_no_hit(Direction origin, Direction destination) {
 		}
 		else if (destination == 2) {//ES
 			 //EN, ES, EW, SE, NW available
-			int volatile need_to_check[7] = { NE,NS,SW,SN,WN,WE,WS };
+			int need_to_check[7] = { NE,NS,SW,SN,WN,WE,WS };
 			if (hit_happen(need_to_check)) {
 				return false;
 			}
@@ -161,7 +161,7 @@ intersection_no_hit(Direction origin, Direction destination) {
 			}
 		} else if (destination == 3) { //EW
 				//EN, ES, EW, WE, EN, WS, SE available
-			int volatile need_to_check[6] = {NE,NS,NW,SW,SN,WN};
+			int need_to_check[6] = {NE,NS,NW,SW,SN,WN};
 			if (hit_happen(need_to_check)) {
 				return false;
 			} else {
@@ -173,7 +173,7 @@ intersection_no_hit(Direction origin, Direction destination) {
 	} else if (origin == 2) { //S
 		if (destination == 0) {//SN
 				//SN, SE, SW, NS, NW, SW, WS available
-			int volatile need_to_check[6] = { NE,ES,EW,EN,WN,WE };
+			int need_to_check[6] = { NE,ES,EW,EN,WN,WE };
 			if (hit_happen(need_to_check)) {
 				return false;
 			}
@@ -184,7 +184,7 @@ intersection_no_hit(Direction origin, Direction destination) {
 		}
 		else if (destination == 1) {//SE
 			 //SN, SE, SW, ES, EN, NW, ALL NOT EAST DESTINATION available
-			int volatile need_to_check[2] = { WE,NE };
+			int need_to_check[2] = { WE,NE };
 			if (hit_happen(need_to_check)) {
 				return false;
 			}
@@ -199,7 +199,7 @@ intersection_no_hit(Direction origin, Direction destination) {
 
 		} else if (destination == 3) { //SW
 				//SN, SE, SW, WS, EN, WS, SE available
-			int volatile need_to_check[7] = {NE,NS,NW,ES,EW,WN,WE};
+			int need_to_check[7] = {NE,NS,NW,ES,EW,WN,WE};
 			if (hit_happen(need_to_check)) {
 				return false;
 			} else {
@@ -211,7 +211,7 @@ intersection_no_hit(Direction origin, Direction destination) {
 	} else { //W
 		if (destination == 0) { //WN
 				//WN, WS, WE, NW, WS, SE available
-			int volatile need_to_check[7] = { NE,NS,ES,EW,EN,SW,SN };
+			int need_to_check[7] = { NE,NS,ES,EW,EN,SW,SN };
 			if (hit_happen(need_to_check)) {
 				return false;
 			}
@@ -222,7 +222,7 @@ intersection_no_hit(Direction origin, Direction destination) {
 		}
 		else if (destination == 1) { //WE
 			 //WN, WS, WE, EW, EN, NW, WS available
-			int volatile need_to_check[6] = { NE,NS,ES,SW,SN,SE };
+			int need_to_check[6] = { NE,NS,ES,SW,SN,SE };
 			if (hit_happen(need_to_check)) {
 				return false;
 			}
@@ -233,7 +233,7 @@ intersection_no_hit(Direction origin, Direction destination) {
 		}
 		else if (destination == 2) { //WS
 			 //WN, WS, WE, SW, NOT SOUTH DESTINATION available
-			int volatile need_to_check[2] = { NS,ES };
+			int need_to_check[2] = { NS,ES };
 			if (hit_happen(need_to_check)) {
 				return false;
 			}
