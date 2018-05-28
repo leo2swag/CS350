@@ -72,110 +72,110 @@ intersection_sync_cleanup(void)
 bool
 intersection_no_hit(Direction origin, Direction destination) {
 	if (origin == 0 && destination == 1) {
-		if (ways[1][2] ||
-			ways[1][3] ||
-			ways[2][3] ||
-			ways[2][1] ||
-			ways[2][0] ||
-			ways[3][0] ||
-			ways[3][1]
+		if (ways[1][2] != 0||
+			ways[1][3] != 0||
+			ways[2][3] != 0||
+			ways[2][1] != 0||
+			ways[2][0] != 0||
+			ways[3][0] != 0||
+			ways[3][1]!= 0
 			) {
 				return false;
 			}
 	} else if (origin == 0 && destination == 2) {
-		if (ways[1][2] ||
-			ways[1][3] ||
-			ways[2][3] ||
-			ways[3][0] ||
-			ways[3][1] ||
-			ways[3][2]
+		if (ways[1][2] != 0||
+			ways[1][3] != 0||
+			ways[2][3] != 0||
+			ways[3][0] != 0||
+			ways[3][1] != 0||
+			ways[3][2] != 0
 			) {
 				return false;
 			}
 	} else if (origin == 0 && destination == 3) {
-		if (ways[2][3] ||
-			ways[1][3]
+		if (ways[2][3] != 0 ||
+			ways[1][3] != 0
 			) {
 				return false;
 			}
 	} else if (origin == 1 && destination == 0) {
-		if (ways[2][0] ||
-			ways[3][0]
+		if (ways[2][0] != 0||
+			ways[3][0] != 0
 			) {
 				return false;
 			}
 	} else if (origin == 1 && destination == 2) {
-		if (ways[0][1] ||
-			ways[0][2] ||
-			ways[2][3] ||
-			ways[2][0] ||
-			ways[3][2] ||
-			ways[3][0] ||
-			ways[3][1]
+		if (ways[0][1] != 0||
+			ways[0][2] != 0||
+			ways[2][3] != 0||
+			ways[2][0] != 0||
+			ways[3][2] != 0||
+			ways[3][0] != 0||
+			ways[3][1] != 0
 			) {
 				return false;
 			}
 	} else if (origin == 1 && destination == 3) {
-		if (ways[0][1] ||
-			ways[0][2] ||
-			ways[0][3] ||
-			ways[2][3] ||
-			ways[2][0] ||
-			ways[3][0]
+		if (ways[0][1] != 0||
+			ways[0][2] != 0||
+			ways[0][3] != 0||
+			ways[2][3] != 0||
+			ways[2][0] != 0||
+			ways[3][0] != 0
 			) {
 				return false;
 			}
 	} else if (origin == 2 && destination == 0) {
-		if (ways[0][1] ||
-			ways[1][2] ||
-			ways[1][3] ||
-			ways[1][0] ||
-			ways[3][0] ||
-			ways[3][1]
+		if (ways[0][1] != 0||
+			ways[1][2] != 0||
+			ways[1][3] != 0||
+			ways[1][0] != 0||
+			ways[3][0] != 0||
+			ways[3][1] != 0
 			) {
 				return false;
 			}
 	} else if (origin == 2 && destination == 1) {
-		if (ways[3][1] ||
-			ways[0][1]
+		if (ways[3][1] != 0||
+			ways[0][1] != 0
 			) {
 				return false;
 			} 
 	} else if (origin == 2 && destination == 3) {
-		if (ways[0][1] ||
-			ways[0][2] ||
-			ways[1][2] ||
-			ways[1][3] ||
-			ways[1][0] ||
-			ways[2][3] ||
-			ways[2][0]
+		if (ways[0][1] != 0||
+			ways[0][2] != 0||
+			ways[1][2] != 0||
+			ways[1][3] != 0||
+			ways[1][0] != 0||
+			ways[2][3] != 0||
+			ways[2][0] != 0
 			) {
 				return false;
 			}
 	} else if (origin == 3 && destination == 0) {
-		if (ways[0][1] ||
-			ways[0][2] ||
-			ways[1][2] ||
-			ways[1][3] ||
-			ways[1][0] ||
-			ways[2][3] ||
-			ways[2][0]
+		if (ways[0][1] != 0||
+			ways[0][2] != 0||
+			ways[1][2] != 0||
+			ways[1][3] != 0||
+			ways[1][0] != 0||
+			ways[2][3] != 0||
+			ways[2][0] != 0
 			) {
 				return false;
 			}
 	} else if (origin == 3 && destination == 1) {
-		if (ways[0][1] ||
-			ways[0][2] ||
-			ways[1][2] ||
-			ways[2][3] ||
-			ways[2][0] ||
-			ways[2][1]
+		if (ways[0][1] != 0||
+			ways[0][2] != 0||
+			ways[1][2] != 0||
+			ways[2][3] != 0||
+			ways[2][0] != 0||
+			ways[2][1] != 0
 			) {
 				return false;
 			}
 	} else if (origin == 3 && destination == 2) {
-		if (ways[0][2] ||
-			ways[1][2]
+		if (ways[0][2] != 0||
+			ways[1][2] != 0
 			) {
 				return false;
 			}
@@ -204,7 +204,7 @@ intersection_before_entry(Direction origin, Direction destination)
 	KASSERT(intersectionLock != NULL);
 	KASSERT(intersectionCv != NULL);
 	lock_acquire(intersectionLock);
-	while (!intersection_no_hit(origin, destination)) {
+	while (intersection_no_hit(origin, destination) == false) {
 		cv_wait(intersectionCv, intersectionLock);
 		
 	}
