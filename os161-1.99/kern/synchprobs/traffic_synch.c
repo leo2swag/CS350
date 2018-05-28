@@ -4,23 +4,10 @@
 #include <synch.h>
 #include <opt-A1.h>
 
-//static int volatile ways[4][3] = {{0,0,0},{0,0,0},{0,0,0},{0,0,0}};
-static volatile int nw = 0;
-static volatile int ne = 0;
-static volatile int ns = 0;
-static volatile int wn = 0;
-static volatile int ws = 0;
-static volatile int we = 0;
-static volatile int en = 0;
-static volatile int es = 0;
-static volatile int ew = 0;
-static volatile int sw = 0;
-static volatile int se = 0;
-static volatile int sn = 0;
+static int volatile ways[4][3] = {{0,0,0},{0,0,0},{0,0,0},{0,0,0}};
 
-//bool hit_happen(int volatile check[]);
 bool intersection_no_hit(Direction origin, Direction destination);
-//void one_intersection_end(Direction origin, Direction destination);
+void one_intersection_end(Direction origin, Direction destination);
 /* 
  * This simple default synchronization mechanism allows only vehicle at a time
  * into the intersection.   The intersectionSem is used as a a lock.
@@ -83,104 +70,117 @@ intersection_sync_cleanup(void)
 
 bool
 intersection_no_hit(Direction origin, Direction destination) {
-	 if(origin == 0)//N
-    {
-        if(destination == 3)//NW
-        {
-          if(ew != 0 || sw != 0)
-              return false;
-          else
-              nw++;
-        }
-        else if(destination == 2)//NS
-        {
-          if(wn != 0 || ws != 0 || we != 0 || es != 0 || ew != 0 || sw != 0)
-              return false;
-          else
-              ns++;
-        }
-        else//NE
-        {
-          if(wn != 0 || we != 0 || es != 0 || ew != 0 || sn != 0 || sw != 0 || se != 0)
-              return false;
-          else
-              ne++;
-        }
-    }
-    else if(origin == 1)//E
-    {
-      if(destination == 0)//EN
-      {
-        if(wn != 0 || sn != 0)
-            return false;
-        else
-            en++;
-      }
-      else if(destination == 2)//ES
-      {
-        if(ne != 0 || ns != 0 || wn != 0 || ws != 0 || we != 0 || sn != 0 || sw != 0)
-            return false;
-        else
-            es++;
-      }
-      else//3 EW
-      {
-        if(ne != 0 || nw!=0 || ns != 0 || wn != 0 || sn != 0 || sw != 0)
-            return false;
-        else
-            ew++;
-      }
-    }
-
-    else if(origin == 2)//S
-    {
-        if(destination == 0)//SN
-        {
-          if(ne != 0 || wn != 0 || we != 0 || en != 0 || es != 0 || ew != 0)
-              return false;
-          else
-              sn++;
-        }
-        else if(destination == 1)//SE
-        {
-          if(ne != 0 || we != 0)
-              return false;
-          else
-              se++;
-        }
-        else//3 SW
-        {
-          if(nw != 0 || ne != 0 || ns != 0 || wn != 0 || we != 0 || es != 0 || ew != 0)
-              return false;
-          else
-              sw++;
-        }
-    }
-    else //W
-    {
-        if(destination == 0)//WN
-        {
-          if(ne != 0 || en != 0 || es != 0 || ew != 0 || sn != 0 || sw != 0)
-              return false;
-          else
-              wn++;
-        }
-        else if(destination == 1)//WE
-        {
-          if(nw != 0 || ne != 0 || ns != 0 || es != 0 || sn != 0 || sw != 0)
-              return false;
-          else
-              we++;
-        }
-        else//2 WS
-        {
-          if(ns != 0 || es != 0)
-              return false;
-          else
-              ws++;
-        }
-    }
-    return true;
+	if (origin == 0 && destination == 1) {
+		if (ways[1][2] != 0||
+			ways[1][3] != 0||
+			ways[2][3] != 0||
+			ways[2][1] != 0||
+			ways[2][0] != 0||
+			ways[3][0] != 0||
+			ways[3][1]!= 0
+			) {
+				return false;
+			}
+	} else if (origin == 0 && destination == 2) {
+		if (ways[1][2] != 0||
+			ways[1][3] != 0||
+			ways[2][3] != 0||
+			ways[3][0] != 0||
+			ways[3][1] != 0||
+			ways[3][2] != 0
+			) {
+				return false;
+			}
+	} else if (origin == 0 && destination == 3) {
+		if (ways[2][3] != 0 ||
+			ways[1][3] != 0
+			) {
+				return false;
+			}
+	} else if (origin == 1 && destination == 0) {
+		if (ways[2][0] != 0||
+			ways[3][0] != 0
+			) {
+				return false;
+			}
+	} else if (origin == 1 && destination == 2) {
+		if (ways[0][1] != 0||
+			ways[0][2] != 0||
+			ways[2][3] != 0||
+			ways[2][0] != 0||
+			ways[3][2] != 0||
+			ways[3][0] != 0||
+			ways[3][1] != 0
+			) {
+				return false;
+			}
+	} else if (origin == 1 && destination == 3) {
+		if (ways[0][1] != 0||
+			ways[0][2] != 0||
+			ways[0][3] != 0||
+			ways[2][3] != 0||
+			ways[2][0] != 0||
+			ways[3][0] != 0
+			) {
+				return false;
+			}
+	} else if (origin == 2 && destination == 0) {
+		if (ways[0][1] != 0||
+			ways[1][2] != 0||
+			ways[1][3] != 0||
+			ways[1][0] != 0||
+			ways[3][0] != 0||
+			ways[3][1] != 0
+			) {
+				return false;
+			}
+	} else if (origin == 2 && destination == 1) {
+		if (ways[3][1] != 0||
+			ways[0][1] != 0
+			) {
+				return false;
+			} 
+	} else if (origin == 2 && destination == 3) {
+		if (ways[0][1] != 0||
+			ways[0][2] != 0||
+			ways[1][2] != 0||
+			ways[1][3] != 0||
+			ways[1][0] != 0||
+			ways[2][3] != 0||
+			ways[2][0] != 0
+			) {
+				return false;
+			}
+	} else if (origin == 3 && destination == 0) {
+		if (ways[0][1] != 0||
+			ways[0][2] != 0||
+			ways[1][2] != 0||
+			ways[1][3] != 0||
+			ways[1][0] != 0||
+			ways[2][3] != 0||
+			ways[2][0] != 0
+			) {
+				return false;
+			}
+	} else if (origin == 3 && destination == 1) {
+		if (ways[0][1] != 0||
+			ways[0][2] != 0||
+			ways[1][2] != 0||
+			ways[2][3] != 0||
+			ways[2][0] != 0||
+			ways[2][1] != 0
+			) {
+				return false;
+			}
+	} else if (origin == 3 && destination == 2) {
+		if (ways[0][2] != 0||
+			ways[1][2] != 0
+			) {
+				return false;
+			}
+	} 
+	ways[origin][destination]++;
+	return true;
 }
 
 
@@ -200,10 +200,9 @@ intersection_no_hit(Direction origin, Direction destination) {
 void
 intersection_before_entry(Direction origin, Direction destination) 
 {
-	//KASSERT(intersectionLock != NULL);
-	KASSERT(intersectionCv != NULL);
+	KASSERT(intersectionLock != NULL);
 	lock_acquire(intersectionLock);
-	while (intersection_no_hit(origin, destination) == false) {
+	while (!intersection_no_hit(origin, destination)) {
 		cv_wait(intersectionCv, intersectionLock);
 		
 	}
@@ -227,53 +226,8 @@ void
 intersection_after_exit(Direction origin, Direction destination) 
 {
 	KASSERT(intersectionLock != NULL);
-	//KASSERT(intersectionCv != NULL);
-
 	lock_acquire(intersectionLock);
-	//one_intersection_end(origin, destination);
-	if(origin == 0)//N
-  {
-      if(destination == 1)//NE
-          ne--;
-      else if(destination == 2)//NS
-          ns--;
-      else//3 NW
-          nw--;
-cv_signal(intersectionCv, intersectionLock);
-  }
-  else if(origin == 1)//E
-  {
-      if(destination == 0)//EN
-          en--;
-      else if(destination == 2)//ES
-          es--;
-      else//3 EW
-          ew--;
-cv_signal(intersectionCv, intersectionLock);
-  }
-  else if(origin == 2)//S
-  {
-      if(destination == 0)//SN
-          sn--;
-      else if(destination == 1)//SE
-          se--;
-      else//3 SW
-          sw--;
-cv_signal(intersectionCv, intersectionLock);
-  }
-  else//(origin == 3)W
-  {
-      if(destination == 0)//WN
-          wn--;
-      else if(destination == 1)//WE
-          we--;
-      else//2 WS
-          ws--;
-
-  cv_signal(intersectionCv, intersectionLock);
-  }
-
-	//ways[origin][destination]--;
-	//cv_signal(intersectionCv, intersectionLock);
+	ways[origin][destination]--;
+	cv_signal(intersectionCv, intersectionLock);
 	lock_release(intersectionLock);
 }
