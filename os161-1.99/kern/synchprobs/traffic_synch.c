@@ -220,7 +220,7 @@ intersection_before_entry(Direction origin, Direction destination)
       		requestStop = true;
       		cv_wait(fintersectionCv, intersectionLock);
     	} else {
-      		cv_wait(intersectionCV, intersectionLock);
+      		cv_wait(intersectionCv, intersectionLock);
     	}
 	}
 	//cv_signal(intersectionCv, intersectionLock);
