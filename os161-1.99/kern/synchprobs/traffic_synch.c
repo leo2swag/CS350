@@ -83,6 +83,9 @@ intersection_no_hit(Direction origin, Direction destination) {
 		} else {
 			ways[0][1]++;
 		}
+		return true;
+		(void)origin;
+		(void)destination;
 }
 
 
