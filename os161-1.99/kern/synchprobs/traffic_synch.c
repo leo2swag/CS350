@@ -6,11 +6,7 @@
 
 static int volatile ways[4][3] = {{0,0,0},{0,0,0},{0,0,0},{0,0,0}};
 
-static bool requestStop = false;
-static Direction curOrigin;
-static Direction curDestination;
 bool intersection_no_hit(Direction origin, Direction destination);
-void one_intersection_end(Direction origin, Direction destination);
 /* 
  * This simple default synchronization mechanism allows only vehicle at a time
  * into the intersection.   The intersectionSem is used as a a lock.
@@ -30,7 +26,7 @@ void one_intersection_end(Direction origin, Direction destination);
  */
 static struct lock *intersectionLock;
 static struct cv *intersectionCv;
-static struct cv *fintersectionCv;
+
 
 
 
@@ -52,10 +48,6 @@ intersection_sync_init(void)
 	if (intersectionCv == NULL) {
 		panic("could not create intersection cv");
 	}
-	fintersectionCv = cv_create("fintersectionCv");
-	if (fintersectionCv == NULL) {
-		panic("could not create fintersection cv");
-	}
 	return;
 }
 
@@ -72,10 +64,8 @@ intersection_sync_cleanup(void)
 {
 	KASSERT(intersectionLock != NULL);
 	KASSERT(intersectionCv != NULL);
-	KASSERT(fintersectionCv != NULL);
 	lock_destroy(intersectionLock);
 	cv_destroy(intersectionCv);
-	cv_destroy(fintersectionCv);
 }
 
 bool
@@ -210,22 +200,13 @@ intersection_no_hit(Direction origin, Direction destination) {
 void
 intersection_before_entry(Direction origin, Direction destination) 
 {
-	KASSERT(intersectionCv != NULL);
-  	KASSERT(fintersectionCv != NULL);
 	KASSERT(intersectionLock != NULL);
 	lock_acquire(intersectionLock);
-	while ((requestStop && origin != curOrigin && destination != curDestination)||!intersection_no_hit(origin, destination)) {
-		//cv_wait(intersectionCv, intersectionLock);
-		if (requestStop == false) {
-      		requestStop = true;
-      		cv_wait(fintersectionCv, intersectionLock);
-    	} else {
-      		cv_wait(intersectionCv, intersectionLock);
-    	}
+	while (!intersection_no_hit(origin, destination)) {
+		cv_wait(intersectionCv, intersectionLock);
+		
 	}
-	//cv_signal(intersectionCv, intersectionLock);
-	curOrigin = origin;
- 	curDestination = destination;
+	cv_signal(intersectionCv, intersectionLock);
 	lock_release(intersectionLock);
 }
 
@@ -245,12 +226,8 @@ void
 intersection_after_exit(Direction origin, Direction destination) 
 {
 	KASSERT(intersectionLock != NULL);
-	KASSERT(intersectionCv != NULL);
-  	KASSERT(fintersectionCv != NULL);
 	lock_acquire(intersectionLock);
 	ways[origin][destination]--;
-	requestStop = false;
-	cv_signal(fintersectionCv, intersectionLock);
-	cv_broadcast(intersectionCv, intersectionLock);
+	cv_signal(intersectionCv, intersectionLock);
 	lock_release(intersectionLock);
 }
