@@ -239,7 +239,7 @@ intersection_after_exit(Direction origin, Direction destination)
           ns--;
       else//3 NW
           nw--;
-  cv_signal(maCv, maLock);
+cv_signal(intersectionCv, intersectionLock);
   }
   else if(origin == 1)//E
   {
@@ -249,7 +249,7 @@ intersection_after_exit(Direction origin, Direction destination)
           es--;
       else//3 EW
           ew--;
-  cv_signal(maCv, maLock);
+cv_signal(intersectionCv, intersectionLock);
   }
   else if(origin == 2)//S
   {
@@ -259,7 +259,7 @@ intersection_after_exit(Direction origin, Direction destination)
           se--;
       else//3 SW
           sw--;
-  cv_signal(maCv, maLock);
+cv_signal(intersectionCv, intersectionLock);
   }
   else//(origin == 3)W
   {
@@ -270,10 +270,10 @@ intersection_after_exit(Direction origin, Direction destination)
       else//2 WS
           ws--;
 
-  cv_signal(maCv, maLock);
+  cv_signal(intersectionCv, intersectionLock);
   }
 
-	ways[origin][destination]--;
-	cv_signal(intersectionCv, intersectionLock);
+	//ways[origin][destination]--;
+	//cv_signal(intersectionCv, intersectionLock);
 	lock_release(intersectionLock);
 }
