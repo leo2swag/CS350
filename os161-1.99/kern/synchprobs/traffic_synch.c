@@ -210,7 +210,7 @@ intersection_no_hit(Direction origin, Direction destination) {
 void
 intersection_before_entry(Direction origin, Direction destination) 
 {
-	KASSERT(intersectionCV != NULL);
+	KASSERT(intersectionCv != NULL);
   	KASSERT(fintersectionCv != NULL);
 	KASSERT(intersectionLock != NULL);
 	lock_acquire(intersectionLock);
@@ -245,7 +245,7 @@ void
 intersection_after_exit(Direction origin, Direction destination) 
 {
 	KASSERT(intersectionLock != NULL);
-	KASSERT(intersectionCV != NULL);
+	KASSERT(intersectionCv != NULL);
   	KASSERT(fintersectionCv != NULL);
 	lock_acquire(intersectionLock);
 	ways[origin][destination]--;
