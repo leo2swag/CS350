@@ -200,7 +200,7 @@ intersection_no_hit(Direction origin, Direction destination) {
 void
 intersection_before_entry(Direction origin, Direction destination) 
 {
-	KASSERT(intersectionLock != NULL);
+	//KASSERT(intersectionLock != NULL);
 	KASSERT(intersectionCv != NULL);
 	lock_acquire(intersectionLock);
 	while (intersection_no_hit(origin, destination) == false) {
@@ -227,7 +227,7 @@ void
 intersection_after_exit(Direction origin, Direction destination) 
 {
 	KASSERT(intersectionLock != NULL);
-	KASSERT(intersectionCv != NULL);
+	//KASSERT(intersectionCv != NULL);
 
 	lock_acquire(intersectionLock);
 	//one_intersection_end(origin, destination);
