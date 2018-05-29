@@ -4,25 +4,9 @@
 #include <synch.h>
 #include <opt-A1.h>
 
-static int ns = 0;
-static int ne = 0;
-static int nw = 0;
-static int sn = 0;
-static int sw = 0;
-static int se = 0;
-static int ew = 0;
-static int en = 0;
-static int es = 0;
-static int we = 0;
-static int wn = 0;
-static int ws = 0;
-static bool requestStop = false;
-static Direction curOrigin;
-static Direction curDestination;
+static int volatile ways[4][3] = {{0,0,0},{0,0,0},{0,0,0},{0,0,0}};
 
-bool checkIntersection(Direction origin, Direction destination);
-void decrement(Direction origin, Direction destination);
-
+bool intersection_no_hit(Direction origin, Direction destination);
 /* 
  * This simple default synchronization mechanism allows only vehicle at a time
  * into the intersection.   The intersectionSem is used as a a lock.
@@ -40,9 +24,11 @@ void decrement(Direction origin, Direction destination);
 /*
  * replace this with declarations of any synchronization and other variables you need here
  */
-static struct lock* intersectionLock;
-static struct cv* intersectionCV;
-static struct cv* firstWaitingCV;
+static struct lock *intersectionLock;
+static struct cv *intersectionCv;
+
+
+
 /* 
  * The simulation driver will call this function once before starting
  * the simulation
@@ -53,22 +39,17 @@ static struct cv* firstWaitingCV;
 void
 intersection_sync_init(void)
 {
-  /* replace this default implementation with your own implementation */
-
-  intersectionLock = lock_create("intersectionLock");
-  intersectionCV = cv_create("intersectionCV");
-  firstWaitingCV = cv_create("firstWaitingCV");
-
-  if (intersectionLock == NULL) {
-    panic("could not create intersection semaphore");
-  } else if (intersectionCV == NULL) {
-    panic("could not create intersection cv");
-  } else if (firstWaitingCV == NULL) {
-    panic("could not create firstWaiting cv");
-  }
-
-  return;
+	intersectionLock = lock_create("intersectionLock");
+	if (intersectionLock == NULL) {
+		panic("could not create intersection lock");
+	}
+	intersectionCv = cv_create("intersectionCv");
+	if (intersectionCv == NULL) {
+		panic("could not create intersection cv");
+	}
+	return;
 }
+
 
 /* 
  * The simulation driver will call this function once after
@@ -80,104 +61,132 @@ intersection_sync_init(void)
 void
 intersection_sync_cleanup(void)
 {
-  /* replace this default implementation with your own implementation */
-  KASSERT(intersectionCV != NULL);
-  KASSERT(firstWaitingCV != NULL);
-  KASSERT(intersectionLock != NULL);
-
-  lock_destroy(intersectionLock);
-  cv_destroy(intersectionCV);
-  cv_destroy(firstWaitingCV);
+	KASSERT(intersectionLock != NULL);
+	KASSERT(intersectionCv != NULL);
+	lock_destroy(intersectionLock);
+	cv_destroy(intersectionCv);
 }
 
-// Check if it will collide with other car that is at the intersection
-bool checkIntersection(Direction origin, Direction destination) {
-  if (origin == north) {  // North
-    if (destination == south
-      && !ew && !we && !sw && !wn && !ws && !es) {  // North South
-      ++ns;
-    } else if (destination == east
-      && !sn && !sw && !se && !we && !wn && !es && !ew) {  // North East
-      ++ne;
-    } else if (destination == west && !sw && !ew) {   // North West
-      ++nw;
-    } else {
-      return false;
-    }
-  } else if (origin == south) {  // South
-    if (destination == north
-      && !ne && !we && !wn && !ew && !es && !en) {  // South North
-      ++sn;
-    } else if (destination == east && !ne && !we) {    // South East
-      ++se;
-    } else if (destination == west
-      && !ns && !nw && !ne && !we && !wn && !ew && !es) {  // South West
-      ++sw;
-    } else {
-      return false;
-    }
-  } else if (origin == east) {   // East
-    if (destination == west
-      && !sn && !sw && !ns && !nw && !ne && !wn) {  // East West
-      ++ew;
-    } else if (destination == north && !sn && !wn) {      // East North
-      ++en;
-    } else if (destination == south
-      && !sn && !sw && !ns && !ne && !we && !ws && !wn) { // East South
-      ++es;
-    } else {
-      return false;
-    }
-  } else if (origin == west) { // West
-    if (destination == east
-      && !sn && !se && !sw && !ns && !ne && !es) { // West East
-      ++we;
-    } else if (destination == north
-      && !sn && !sw && !ns && !ne && !ew && !en && !es) {  // West North
-      ++wn;
-    } else if (destination == south && !ns && !es) {  // West South
-      ++ws;
-    } else {
-      return false;
-    }
-  }
-  return true;
-}
-
-// Decrement the number of cars in the given direction
-void decrement(Direction origin, Direction destination) {
-  if (origin == north && destination == south) {
-    --ns;
-  } else if (origin == north && destination == east) {
-    --ne;
-  } else if (origin == north && destination == west) {
-    --nw;
-  } else if (origin == south && destination == north) {
-    --sn;
-  } else if (origin == south && destination == east) {
-    --se;
-  } else if (origin == south && destination == west) {
-    --sw;
-  } else if (origin == east && destination == west) {
-    --ew;
-  } else if (origin == east && destination == north) {
-    --en;
-  } else if (origin == east && destination == south) {
-    --es;
-  } else if (origin == west && destination == east) {
-    --we;
-  } else if (origin == west && destination == north) {
-    --wn;
-  } else if (origin == west && destination == south) {
-    --ws;
-  }
+bool
+intersection_no_hit(Direction origin, Direction destination) {
+	if (origin == 0 && destination == 1) {
+		if (ways[1][2]||
+			ways[1][3]||
+			ways[2][3]||
+			ways[2][1]||
+			ways[2][0]||
+			ways[3][0]||
+			ways[3][1]
+			) {
+				return false;
+			}
+	} else if (origin == 0 && destination == 2) {
+		if (ways[1][2]||
+			ways[1][3]||
+			ways[2][3]||
+			ways[3][0]||
+			ways[3][1]||
+			ways[3][2]
+			) {
+				return false;
+			}
+	} else if (origin == 0 && destination == 3) {
+		if (ways[2][3]||
+			ways[1][3]
+			) {
+				return false;
+			}
+	} else if (origin == 1 && destination == 0) {
+		if (ways[2][0]||
+			ways[3][0]
+			) {
+				return false;
+			}
+	} else if (origin == 1 && destination == 2) {
+		if (ways[0][1]||
+			ways[0][2]||
+			ways[2][3]||
+			ways[2][0]||
+			ways[3][2]||
+			ways[3][0]||
+			ways[3][1]
+			) {
+				return false;
+			}
+	} else if (origin == 1 && destination == 3) {
+		if (ways[0][1]||
+			ways[0][2]||
+			ways[0][3]||
+			ways[2][3]||
+			ways[2][0]||
+			ways[3][0]
+			) {
+				return false;
+			}
+	} else if (origin == 2 && destination == 0) {
+		if (ways[0][1]||
+			ways[1][2]||
+			ways[1][3]||
+			ways[1][0]||
+			ways[3][0]||
+			ways[3][1]
+			) {
+				return false;
+			}
+	} else if (origin == 2 && destination == 1) {
+		if (ways[3][1]||
+			ways[0][1]
+			) {
+				return false;
+			} 
+	} else if (origin == 2 && destination == 3) {
+		if (ways[0][1]||
+			ways[0][2]||
+			ways[1][2]||
+			ways[1][3]||
+			ways[1][0]||
+			ways[2][3]||
+			ways[2][0]
+			) {
+				return false;
+			}
+	} else if (origin == 3 && destination == 0) {
+		if (ways[0][1]||
+			ways[0][2]||
+			ways[1][2]||
+			ways[1][3]||
+			ways[1][0]||
+			ways[2][3]||
+			ways[2][0]
+			) {
+				return false;
+			}
+	} else if (origin == 3 && destination == 1) {
+		if (ways[0][1]||
+			ways[0][2]||
+			ways[1][2]||
+			ways[2][3]||
+			ways[2][0]||
+			ways[2][1]
+			) {
+				return false;
+			}
+	} else if (origin == 3 && destination == 2) {
+		if (ways[0][2]||
+			ways[1][2]
+			) {
+				return false;
+			}
+	} 
+	ways[origin][destination]++;
+	return true;
 }
 
 
 /*
  * The simulation driver will call this function each time a vehicle
  * tries to enter the intersection, before it enters.
- * This function should cause the calling simulation thread
+ * This function should cause the calling simulation thread 
  * to block until it is OK for the vehicle to enter the intersection.
  *
  * parameters:
@@ -188,31 +197,21 @@ void decrement(Direction origin, Direction destination) {
  */
 
 void
-intersection_before_entry(Direction origin, Direction destination)
+intersection_before_entry(Direction origin, Direction destination) 
 {
-  /* replace this default implementation with your own implementation */
-  KASSERT(intersectionCV != NULL);
-  KASSERT(firstWaitingCV != NULL);
-  KASSERT(intersectionLock != NULL);
-
-  lock_acquire(intersectionLock);
-  while ((requestStop && origin != curOrigin && destination != curDestination)
-      || !checkIntersection(origin, destination)) {
-    if (requestStop == false) {
-      requestStop = true;
-      cv_wait(firstWaitingCV, intersectionLock);
-    } else {
-      cv_wait(intersectionCV, intersectionLock);
-    }
-  }
-  curOrigin = origin;
-  curDestination = destination;
-  lock_release(intersectionLock);
+	KASSERT(intersectionLock != NULL);
+	lock_acquire(intersectionLock);
+	while (intersection_no_hit(origin, destination) == false) {
+		cv_wait(intersectionCv, intersectionLock);
+	}
+	cv_signal(intersectionCv, intersectionLock);
+	lock_release(intersectionLock);
 }
+
 
 /*
  * The simulation driver will call this function each time a vehicle
- * leaves the intersction.
+ * leaves the intersection.
  *
  * parameters:
  *    * origin: the Direction from which the vehicle arrived
@@ -222,16 +221,11 @@ intersection_before_entry(Direction origin, Direction destination)
  */
 
 void
-intersection_after_exit(Direction origin, Direction destination)
+intersection_after_exit(Direction origin, Direction destination) 
 {
-  KASSERT(intersectionCV != NULL);
-  KASSERT(firstWaitingCV != NULL);
-  KASSERT(intersectionLock != NULL);
-
-  lock_acquire(intersectionLock);
-  decrement(origin, destination);
-  requestStop = false;
-  cv_signal(firstWaitingCV, intersectionLock);
-  cv_broadcast(intersectionCV, intersectionLock);
-  lock_release(intersectionLock);
+	KASSERT(intersectionLock != NULL);
+	lock_acquire(intersectionLock);
+	ways[origin][destination]--;
+	cv_signal(intersectionCv, intersectionLock);
+	lock_release(intersectionLock);
 }
