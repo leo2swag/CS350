@@ -69,111 +69,111 @@ intersection_sync_cleanup(void)
 
 bool
 intersection_no_hit(Direction origin, Direction destination) {
-	if (origin == 0 && destination == 1) {
-		if (ways[1][2]||
-			ways[1][3]||
-			ways[2][3]||
-			ways[2][1]||
-			ways[2][0]||
-			ways[3][0]||
-			ways[3][1]
+	if (origin == 0 && destination == 1) { //NE
+		if (ways[1][2]||	//ES
+			ways[1][3]||	//EW
+			ways[2][3]||	//SW
+			ways[2][1]||	//SE
+			ways[2][0]||	//SN
+			ways[3][0]||	//WN
+			ways[3][1]		//WE
 			) {
 				return false;
 			}
-	} else if (origin == 0 && destination == 2) {
-		if (ways[1][2]||
-			ways[1][3]||
-			ways[2][3]||
-			ways[3][0]||
-			ways[3][1]||
-			ways[3][2]
+	} else if (origin == 0 && destination == 2) { //NS
+		if (ways[1][2]||	//ES
+			ways[1][3]||	//EW
+			ways[2][3]||	//SW
+			ways[3][0]||	//WN
+			ways[3][1]||	//WE
+			ways[3][2]		//WS
 			) {
 				return false;
 			}
-	} else if (origin == 0 && destination == 3) {
-		if (ways[2][3]||
-			ways[1][3]
+	} else if (origin == 0 && destination == 3) { //NW
+		if (ways[2][3]||	//SW
+			ways[1][3]		//EW
 			) {
 				return false;
 			}
-	} else if (origin == 1 && destination == 0) {
-		if (ways[2][0]||
-			ways[3][0]
+	} else if (origin == 1 && destination == 0) { //EN
+		if (ways[2][0]||	//SN
+			ways[3][0]		//WN
 			) {
 				return false;
 			}
-	} else if (origin == 1 && destination == 2) {
-		if (ways[0][1]||
-			ways[0][2]||
-			ways[2][3]||
-			ways[2][0]||
-			ways[3][2]||
-			ways[3][0]||
-			ways[3][1]
+	} else if (origin == 1 && destination == 2) { //ES
+		if (ways[0][1]||	//NE
+			ways[0][2]||	//NS
+			ways[2][3]||	//SW
+			ways[2][0]||	//SN
+			ways[3][2]||	//WS
+			ways[3][0]||	//WN
+			ways[3][1]		//WE
 			) {
 				return false;
 			}
-	} else if (origin == 1 && destination == 3) {
-		if (ways[0][1]||
-			ways[0][2]||
-			ways[0][3]||
-			ways[2][3]||
-			ways[2][0]||
-			ways[3][0]
+	} else if (origin == 1 && destination == 3) { //EW
+		if (ways[0][1]||	//NE
+			ways[0][2]||	//NS
+			ways[0][3]||	//NW
+			ways[2][3]||	//SW
+			ways[2][0]||	//SN
+			ways[3][0]		//WN
 			) {
 				return false;
 			}
-	} else if (origin == 2 && destination == 0) {
-		if (ways[0][1]||
-			ways[1][2]||
-			ways[1][3]||
-			ways[1][0]||
-			ways[3][0]||
-			ways[3][1]
+	} else if (origin == 2 && destination == 0) { //SN
+		if (ways[0][1]||	//NE
+			ways[1][2]||	//ES
+			ways[1][3]||	//EW
+			ways[1][0]||	//EN
+			ways[3][0]||	//WN
+			ways[3][1]		//WE
 			) {
 				return false;
 			}
-	} else if (origin == 2 && destination == 1) {
-		if (ways[3][1]||
-			ways[0][1]
+	} else if (origin == 2 && destination == 1) { //SE
+		if (ways[3][1]||	//WE
+			ways[0][1]		//NE
 			) {
 				return false;
 			} 
-	} else if (origin == 2 && destination == 3) {
-		if (ways[0][1]||
-			ways[0][2]||
-			ways[1][2]||
-			ways[1][3]||
-			ways[1][0]||
-			ways[2][3]||
-			ways[2][0]
+	} else if (origin == 2 && destination == 3) { //SW
+		if (ways[0][1]||	//NE
+			ways[0][2]||	//NS
+			ways[1][2]||	//ES
+			ways[1][3]||	//EW
+			ways[0][3]||	//NW
+			ways[3][1]||	//WE
+			ways[3][0]		//WN
 			) {
 				return false;
 			}
-	} else if (origin == 3 && destination == 0) {
-		if (ways[0][1]||
-			ways[0][2]||
-			ways[1][2]||
-			ways[1][3]||
-			ways[1][0]||
-			ways[2][3]||
-			ways[2][0]
+	} else if (origin == 3 && destination == 0) { //WN
+		if (ways[0][1]||	//NE
+			ways[0][2]||	//NS
+			ways[1][2]||	//ES
+			ways[1][3]||	//EW
+			ways[1][0]||	//EN
+			ways[2][3]||	//SW
+			ways[2][0]		//SN
 			) {
 				return false;
 			}
-	} else if (origin == 3 && destination == 1) {
-		if (ways[0][1]||
-			ways[0][2]||
-			ways[1][2]||
-			ways[2][3]||
-			ways[2][0]||
-			ways[2][1]
+	} else if (origin == 3 && destination == 1) { //WE
+		if (ways[0][1]||	//NE
+			ways[0][2]||	//NS
+			ways[1][2]||	//ES
+			ways[2][3]||	//SW
+			ways[2][0]||	//SN
+			ways[2][1]		//SE
 			) {
 				return false;
 			}
-	} else if (origin == 3 && destination == 2) {
-		if (ways[0][2]||
-			ways[1][2]
+	} else if (origin == 3 && destination == 2) { //WS
+		if (ways[0][2]||	//NS
+			ways[1][2]		//ES
 			) {
 				return false;
 			}
@@ -200,9 +200,9 @@ void
 intersection_before_entry(Direction origin, Direction destination) 
 {
 	KASSERT(intersectionLock != NULL);
-	kprintf("origin %d, destination %d\n", origin, destination);
+	//kprintf("origin %d, destination %d\n", origin, destination);
 	lock_acquire(intersectionLock);
-	while (intersection_no_hit(origin, destination) == false) {
+	while (!intersection_no_hit(origin, destination)) {
 		cv_wait(intersectionCv, intersectionLock);
 	}
 	cv_signal(intersectionCv, intersectionLock);
