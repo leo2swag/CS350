@@ -17,7 +17,7 @@ if [ $# -lt 1 ]; then
 						tmpfile=mytmp
 						while [ $iter -ge $counter ]; do
 									sys161 kernel "$cmd" > $tmpfile
-											if [ `wc -l $tmpfile | cut -f1 -d' '` -lt 40 ]; then
+											if egrep "panic" tempfile; then
 																echo "failed"
 																				exit 1
 																						fi
