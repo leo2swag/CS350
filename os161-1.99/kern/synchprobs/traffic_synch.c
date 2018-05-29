@@ -200,7 +200,7 @@ void
 intersection_before_entry(Direction origin, Direction destination) 
 {
 	KASSERT(intersectionLock != NULL);
-	kprintf("origin %d destination %d", origin, destination);
+	kprintf("origin %d, destination %d\n", origin, destination);
 	lock_acquire(intersectionLock);
 	while (intersection_no_hit(origin, destination) == false) {
 		cv_wait(intersectionCv, intersectionLock);
