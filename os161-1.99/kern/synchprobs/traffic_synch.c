@@ -4,7 +4,7 @@
 #include <synch.h>
 #include <opt-A1.h>
 
-static int volatile ways[4][3] = {{0,0,0},{0,0,0},{0,0,0},{0,0,0}};
+static int volatile ways[4][3] = {{0,0,0},{0,0,0},{0,0,0},{0,0,0}}; //stands for all the directions
 
 bool intersection_no_hit(Direction origin, Direction destination);
 /* 
