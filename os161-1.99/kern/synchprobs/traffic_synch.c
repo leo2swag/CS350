@@ -5,6 +5,32 @@
 #include <opt-A1.h>
 
 static int volatile ways[4][3] = {{0,0,0},{0,0,0},{0,0,0},{0,0,0}}; //stands for all the directions
+static int volatile ncounter = 0;
+static int volatile ecounter = 0;
+static int volatile scounter = 0;
+static int volatile wcounter = 0;
+
+bool checkfairness(Direction origin) {
+	if (origin == 0) {
+		if (ncounter >= (ecounter + scounter + wcounter)) {
+			return false;
+		}
+	} else if (origin == 1) {
+		if (ecounter >= (ncounter + scounter + wcounter)) {
+			return false;
+		}
+	} else if (origin == 2) {
+		if (scounter >= (ecounter + ncounter + wcounter)) {
+			return false;
+		}
+	}
+	else {
+		if (wcounter >= (ecounter + scounter + ncounter)) {
+			return false;
+		}
+	}
+	return true;
+}
 
 bool intersection_no_hit(Direction origin, Direction destination);
 /* 
@@ -201,8 +227,20 @@ intersection_before_entry(Direction origin, Direction destination)
 {
 	KASSERT(intersectionLock != NULL);
 	//kprintf("origin %d, destination %d\n", origin, destination);
+	if (origin == 0) {
+		ncounter++;
+	}
+	else if (origin == 1) {
+		ecounter++;
+	}
+	else if (origin == 2) {
+		scounter++;
+	}
+	else {
+		wcounter++;
+	}
 	lock_acquire(intersectionLock);
-	while (!intersection_no_hit(origin, destination)) {
+	while (!checkfairness(origin) || !intersection_no_hit(origin, destination)) {
 		cv_wait(intersectionCv, intersectionLock);
 	}
 	cv_signal(intersectionCv, intersectionLock);
@@ -227,6 +265,18 @@ intersection_after_exit(Direction origin, Direction destination)
 	KASSERT(intersectionLock != NULL);
 	lock_acquire(intersectionLock);
 	ways[origin][destination]--;
+	if (origin == 0) {
+		ncounter--;
+	}
+	else if (origin == 1) {
+		ecounter--;
+	}
+	else if (origin == 2) {
+		scounter--;
+	}
+	else {
+		wcounter--;
+	}
 	cv_signal(intersectionCv, intersectionLock);
 	lock_release(intersectionLock);
 }
