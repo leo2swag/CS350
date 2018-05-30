@@ -283,6 +283,6 @@ intersection_after_exit(Direction origin, Direction destination)
 	else {
 		wcounter--;
 	}
-	cv_signal(intersectionCv, intersectionLock);
-	lock_release(intersectionLock);
+	cv_broadcast(intersectionCv, intersectionLock);
+	lock_release(intersectionLock); 
 }
