@@ -10,28 +10,8 @@ static int volatile ecounter = 0;
 static int volatile scounter = 0;
 static int volatile wcounter = 0;
 
-bool checkfairness(Direction origin) {
-	if (origin == 0) {
-		if (ncounter >= (ecounter + scounter + wcounter)) {
-			return false;
-		}
-	} else if (origin == 1) {
-		if (ecounter >= (ncounter + scounter + wcounter)) {
-			return false;
-		}
-	} else if (origin == 2) {
-		if (scounter >= (ecounter + ncounter + wcounter)) {
-			return false;
-		}
-	}
-	else {
-		if (wcounter >= (ecounter + scounter + ncounter)) {
-			return false;
-		}
-	}
-	return true;
-}
 
+bool checkfairness(Direction origin);
 bool intersection_no_hit(Direction origin, Direction destination);
 /* 
  * This simple default synchronization mechanism allows only vehicle at a time
@@ -62,6 +42,32 @@ static struct cv *intersectionCv;
  * You can use it to initialize synchronization and other variables.
  * 
  */
+
+bool 
+checkfairness(Direction origin) {
+	if (origin == 0) {
+		if (ncounter >= (ecounter + scounter + wcounter)) {
+			return false;
+		}
+	}
+	else if (origin == 1) {
+		if (ecounter >= (ncounter + scounter + wcounter)) {
+			return false;
+		}
+	}
+	else if (origin == 2) {
+		if (scounter >= (ecounter + ncounter + wcounter)) {
+			return false;
+		}
+	}
+	else {
+		if (wcounter >= (ecounter + scounter + ncounter)) {
+			return false;
+		}
+	}
+	return true;
+}
+
 void
 intersection_sync_init(void)
 {
