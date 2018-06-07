@@ -38,6 +38,7 @@
 
 #include <spinlock.h>
 #include <thread.h> /* required for struct threadarray */
+#include "opt-A2.h"
 
 struct addrspace;
 struct vnode;
@@ -59,6 +60,11 @@ struct proc {
 	/* VFS */
 	struct vnode *p_cwd;		/* current working directory */
 
+#ifdef OPT_A2
+	pid_t pid;
+	struct lock *proc_lock;
+	struct cv *proc_cv;
+#endif
 #ifdef UW
   /* a vnode to refer to the console device */
   /* this is a quick-and-dirty way to get console writes working */

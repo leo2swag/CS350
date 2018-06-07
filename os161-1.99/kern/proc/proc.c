@@ -208,6 +208,10 @@ proc_bootstrap(void)
     panic("could not create no_proc_sem semaphore\n");
   }
 #endif // UW 
+
+#ifdef OPT_A2
+  static int volatile counter = 2;
+#endif
 }
 
 /*

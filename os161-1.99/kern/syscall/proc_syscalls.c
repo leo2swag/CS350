@@ -9,9 +9,60 @@
 #include <thread.h>
 #include <addrspace.h>
 #include <copyinout.h>
+#include "opt-A2.h"
 
   /* this implementation of sys__exit does not do anything with the exit code */
   /* this needs to be fixed to get exit() and waitpid() working properly */
+#ifdef OPT_A2
+
+void forked_process(void *tf, unsigned long data) {
+  struct trapframe tflocal = *(struct trapframe *) tf;
+  tflocal.tf_a3 = 0;
+  tflocal.tf_v0 = 0;
+  tflocal.tf_epc += 4;
+  mips_usermode(&tflocal);
+  free(tf);
+  (void) data;
+}
+
+int 
+fork(struct trapframe *parent_tf, pid_t *retval) {
+  //create process
+  struct *proc child = proc_create_runprogram(curproc->p_name);
+  if (child == NULL) {
+    return ENOMEM; //out of memory code 
+  }
+  
+  //create address space
+  struct addrspace *child_addre;
+  int copy_det = as_copy(curproc->p_addrspace, &child_addre);
+  if (copy_det) {
+    proc_destroy(child);
+    return copy_det;
+  }
+  child->p_addrspace = child_addre;
+  
+  //assign pid
+  lock_acquire(child->proc_lock);
+  child->pid = counter;
+  counter++;
+  lock_release(child->proc_lock);
+
+  //create thread
+  struct trapframe *child_tf = kmalloc(sizeof(struct trapframe));
+  memccpy(child_tf, parent_tf, sizeof(struct trapframe));
+  int thread_det = thread_fork(child->p_name, child, forked_process, child_tf, 0);
+  if (thread_det) {
+    kfree(child_addre);
+    proc_destroy(child);
+    return thread_det;
+  }
+
+  *retval = child->pid;
+  return 0;
+}
+
+#endif
 
 void sys__exit(int exitcode) {
 
@@ -55,7 +106,11 @@ sys_getpid(pid_t *retval)
 {
   /* for now, this is just a stub that always returns a PID of 1 */
   /* you need to fix this to make it work properly */
-  *retval = 1;
+  #ifdef OPT_A2
+    *retval = curproc->pid;
+  #else
+    *retval = 1;
+  #endif
   return(0);
 }
 
