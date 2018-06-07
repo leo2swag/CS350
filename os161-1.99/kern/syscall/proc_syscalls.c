@@ -14,6 +14,8 @@
 #include <vfs.h>
 #include <kern/fcntl.h>
 #include <test.h>
+#include <sfs.h>
+#include <synch.h>
 
 
   /* this implementation of sys__exit does not do anything with the exit code */
