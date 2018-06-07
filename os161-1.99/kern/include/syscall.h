@@ -66,4 +66,8 @@ int sys_waitpid(pid_t pid, userptr_t status, int options, pid_t *retval);
 
 #endif // UW
 
+#ifdef OPT_A2
+void forked_process(void *tf, unsigned long data);
+int sys_fork(struct trapframe *parent_tf, pid_t *retval)
+
 #endif /* _SYSCALL_H_ */

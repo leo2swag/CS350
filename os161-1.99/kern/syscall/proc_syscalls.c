@@ -10,13 +10,19 @@
 #include <addrspace.h>
 #include <copyinout.h>
 #include "opt-A2.h"
+#include <mips/trapframe.h>
+#include <vfs.h>
+#include <kern/fcntl.h>
+#include <test.h>
+
 
   /* this implementation of sys__exit does not do anything with the exit code */
   /* this needs to be fixed to get exit() and waitpid() working properly */
+
 #ifdef OPT_A2
 
 void forked_process(void *tf, unsigned long data) {
-  struct trapframe tflocal = *(struct trapframe *) tf;
+  struct trapframe tflocal = *((struct trapframe *) tf);
   tflocal.tf_a3 = 0;
   tflocal.tf_v0 = 0;
   tflocal.tf_epc += 4;
@@ -26,13 +32,13 @@ void forked_process(void *tf, unsigned long data) {
 }
 
 int 
-fork(struct trapframe *parent_tf, pid_t *retval) {
+sys_fork(struct trapframe *parent_tf, pid_t *retval) {
   //create process
-  struct *proc child = proc_create_runprogram(curproc->p_name);
+  struct proc *child = proc_create_runprogram(curproc->p_name);
   if (child == NULL) {
     return ENOMEM; //out of memory code 
   }
-  
+
   //create address space
   struct addrspace *child_addre;
   int copy_det = as_copy(curproc->p_addrspace, &child_addre);

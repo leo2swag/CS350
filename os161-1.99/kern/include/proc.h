@@ -46,6 +46,9 @@ struct vnode;
 struct semaphore;
 #endif // UW
 
+#ifdef OPT_A2
+static int volatile counter = 2;
+#endif
 /*
  * Process structure.
  */
