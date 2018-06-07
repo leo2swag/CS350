@@ -29,7 +29,7 @@ void forked_process(void *tf, unsigned long data) {
   tflocal.tf_v0 = 0;
   tflocal.tf_epc += 4;
   mips_usermode(&tflocal);
-  free(tf);
+  kfree(tf);
   (void) data;
 }
 
@@ -58,7 +58,7 @@ sys_fork(struct trapframe *parent_tf, pid_t *retval) {
 
   //create thread
   struct trapframe *child_tf = kmalloc(sizeof(struct trapframe));
-  memccpy(child_tf, parent_tf, sizeof(struct trapframe));
+  memcpy(child_tf, parent_tf, sizeof(struct trapframe));
   int thread_det = thread_fork(child->p_name, child, forked_process, child_tf, 0);
   if (thread_det) {
     kfree(child_addre);
