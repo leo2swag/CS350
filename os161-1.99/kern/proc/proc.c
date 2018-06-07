@@ -212,6 +212,7 @@ proc_bootstrap(void)
 
 #ifdef OPT_A2
   static int volatile counter = 2;
+  (int)counter;
 #endif
 }
 
