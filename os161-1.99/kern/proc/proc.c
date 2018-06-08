@@ -211,7 +211,7 @@ proc_bootstrap(void)
 #endif // UW 
 
 #ifdef OPT_A2
-  counter = 2;
+  pid_incre = 2;
 #endif
 }
 
@@ -276,7 +276,7 @@ proc_create_runprogram(const char *name)
 	V(proc_count_mutex);
 #endif // UW
 #ifdef OPT_A2
-
+proc->parent_pid = -1;
 proc->proc_lock = lock_create(name);
 KASSERT(proc->proc_lock);
 #endif
