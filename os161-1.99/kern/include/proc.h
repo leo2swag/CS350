@@ -46,9 +46,6 @@ struct vnode;
 struct semaphore;
 #endif // UW
 
-#ifdef OPT_A2
-static int volatile counter = 2;
-#endif
 /*
  * Process structure.
  */
@@ -65,8 +62,9 @@ struct proc {
 
 #ifdef OPT_A2
 	pid_t pid;
+	pid_t parent_pid;
 	struct lock *proc_lock;
-	struct cv *proc_cv;
+	//struct cv *proc_cv;
 #endif
 #ifdef UW
   /* a vnode to refer to the console device */

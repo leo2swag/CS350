@@ -52,6 +52,7 @@ sys_fork(struct trapframe *parent_tf, pid_t *retval) {
   
   //assign pid
   lock_acquire(child->proc_lock);
+  child->parent_pid = curproc->pid;
   child->pid = counter;
   counter++;
   lock_release(child->proc_lock);

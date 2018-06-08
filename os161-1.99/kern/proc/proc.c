@@ -211,8 +211,7 @@ proc_bootstrap(void)
 #endif // UW 
 
 #ifdef OPT_A2
-  static int volatile counter = 2;
-  (int)counter;
+  extern int volatile counter = 2;
 #endif
 }
 
@@ -276,6 +275,11 @@ proc_create_runprogram(const char *name)
 	proc_count++;
 	V(proc_count_mutex);
 #endif // UW
+#ifdef OPT_A2
+
+proc->proc_lock = lock_create(name);
+KASSERT(proc_lock);
+#endif
 
 	return proc;
 }
