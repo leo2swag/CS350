@@ -47,7 +47,7 @@ struct semaphore;
 #endif // UW
 
 #ifdef OPT_A2
-extern int volatile pid_incre;
+int volatile pid_incre;
 #endif
 /*
  * Process structure.
