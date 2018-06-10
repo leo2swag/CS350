@@ -212,6 +212,7 @@ proc_bootstrap(void)
 
 #ifdef OPT_A2
   pid_incre = 2;
+  //proc_dict_lock = lock_create("proc_dict_lock");
 #endif
 }
 
@@ -278,7 +279,10 @@ proc_create_runprogram(const char *name)
 #ifdef OPT_A2
 proc->parent_pid = -1;
 proc->proc_lock = lock_create(name);
+proc->proc_cv = cv_create(name);
+
 KASSERT(proc->proc_lock);
+KASSERT(proc->proc_cv);
 #endif
 
 	return proc;

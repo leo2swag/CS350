@@ -54,6 +54,7 @@ sys_fork(struct trapframe *parent_tf, pid_t *retval) {
   lock_acquire(child->proc_lock);
   child->parent_pid = curproc->pid;
   child->pid = pid_incre;
+  dict[pid_incre] = child;
   pid_incre++;
   lock_release(child->proc_lock);
 
@@ -134,6 +135,7 @@ sys_waitpid(pid_t pid,
   int exitstatus;
   int result;
 
+
   /* this is just a stub implementation that always reports an
      exit status of 0, regardless of the actual exit status of
      the specified process.   
@@ -146,8 +148,20 @@ sys_waitpid(pid_t pid,
   if (options != 0) {
     return(EINVAL);
   }
+
+#ifdef OPT_A2
+  lock_acquire(proc_dict_lock);
+  struct proc *child = dict[pid];
+  if (child != NULL) {
+	  cv_wait(child->proc_cv, proc_dict_lock);
+  }
+  lock_release(proc_dict_lock);
+
+#else
   /* for now, just pretend the exitstatus is 0 */
   exitstatus = 0;
+#endif
+
   result = copyout((void *)&exitstatus,status,sizeof(int));
   if (result) {
     return(result);

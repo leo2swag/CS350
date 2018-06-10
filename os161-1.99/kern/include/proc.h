@@ -48,6 +48,9 @@ struct semaphore;
 
 #ifdef OPT_A2
 int volatile pid_incre;
+//struct volatile proc *dict[64];
+//struct volatile lock *proc_dict_lock;
+
 #endif
 /*
  * Process structure.
@@ -66,8 +69,11 @@ struct proc {
 #ifdef OPT_A2
 	pid_t pid;
 	pid_t parent_pid;
+	int exitcode;
+	int child_counter;	//increment child_counter each time parent forks child
+	struct proc *child[64]; //store all the child proc based on child_counter
 	struct lock *proc_lock;
-	//struct cv *proc_cv;
+	struct cv *proc_cv;
 #endif
 #ifdef UW
   /* a vnode to refer to the console device */
