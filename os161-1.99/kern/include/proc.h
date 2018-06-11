@@ -47,9 +47,12 @@ struct semaphore;
 #endif // UW
 
 #ifdef OPT_A2
-int volatile pid_incre;
-//struct volatile proc *dict[64];
-//struct volatile lock *proc_dict_lock;
+int volatile parent_pid_incre;
+int volatile child_pid_incre;
+struct volatile proc *parentTable[64];
+struct volatile proc *childTable[64];
+struct lock *parent_table_lock;
+struct lock *child_table_lock;
 
 #endif
 /*
@@ -70,8 +73,8 @@ struct proc {
 	pid_t pid;
 	pid_t parent_pid;
 	int exitcode;
-	int child_counter;	//increment child_counter each time parent forks child
-	struct proc *child[64]; //store all the child proc based on child_counter
+	bool firstGenChild;
+	bool ifalive;
 	struct lock *proc_lock;
 	struct cv *proc_cv;
 #endif
