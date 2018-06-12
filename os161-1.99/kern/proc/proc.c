@@ -164,6 +164,20 @@ proc_destroy(struct proc *proc)
 	}
 #endif // UW
 
+	#ifdef OPT_A2
+/*
+	if (proc->parent_pid == -1) {
+		parentTable[proc->pid] = NULL; //current proc is parent
+	}
+	else {
+		childTable[proc->pid] = NULL; //either current proc is child or grandchild
+	}
+	*/
+	parentTable[proc->pid] = NULL;
+	lock_destroy(proc->proc_lock);
+	cv_destroy(proc->proc_cv);
+#endif
+
 	threadarray_cleanup(&proc->p_threads);
 	spinlock_cleanup(&proc->p_lock);
 
@@ -184,20 +198,6 @@ proc_destroy(struct proc *proc)
 	}
 	V(proc_count_mutex);
 #endif // UW
-
-#ifdef OPT_A2
-/*
-	if (proc->parent_pid == -1) {
-		parentTable[proc->pid] = NULL; //current proc is parent
-	}
-	else {
-		childTable[proc->pid] = NULL; //either current proc is child or grandchild
-	}
-	*/
-	parentTable[proc->pid] = NULL;
-	lock_destroy(proc->proc_lock);
-	cv_destroy(proc->proc_cv);
-#endif
 
 }
 
