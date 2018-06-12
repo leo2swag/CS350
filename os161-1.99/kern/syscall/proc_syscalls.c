@@ -93,10 +93,7 @@ void sys__exit(int exitcode) {
      an unused variable */
 #ifdef OPT_A2
   if (p->parent_pid != -1) {
-	  struct proc *childparent = childprocs[p->parent_pid]; //parent_pid not -1 meaning not the ori parent
-	  if (childparent == NULL) {
-		  return ESRCH;
-	  }
+	 
 	  lock_acquire(p->proc_lock);
 	  p->ifalive = false;
 	  p->exitcode = _MKWAIT_EXIT(exitcode);
@@ -110,9 +107,7 @@ void sys__exit(int exitcode) {
 	  cv_signal(p->proc_cv, p->proc_lock);
 	  lock_release(p->proc_lock);
   }
-  else {
-	  struct proc *parent = parentprocs[p->parent_pid];
-  }
+
 #else
   (void)exitcode;
 #endif
