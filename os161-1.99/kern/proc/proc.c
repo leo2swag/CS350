@@ -297,9 +297,7 @@ KASSERT(proc->proc_lock);
 proc->proc_cv = cv_create(name);
 KASSERT(proc->proc_cv);
 
-lock_acquire(proc->proc_lock);
 proc->ifalive = true;
-lock_release(proc->proc_lock);
 
 lock_acquire(allprocs_lock);
 allprocs[proc->pid] = proc;
