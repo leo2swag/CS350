@@ -70,14 +70,14 @@ static struct semaphore *proc_count_mutex;
 struct semaphore *no_proc_sem;   
 #endif  // UW
 
-#ifdef OPT_A2
-int volatile pid_incre;
+//#ifdef OPT_A2
+//int volatile pid_incre;
 //struct proc *allprocs[66];
-struct proc *childprocs[66];
+//struct proc *childprocs[64];
 //struct proc *parentprocs[66];
 //struct lock *allprocs_lock;
-struct lock *childprocs_lock;
-#endif
+//struct lock *childprocs_lock;
+//#endif
 /*
  * Create a proc structure.
  */
@@ -170,8 +170,7 @@ proc_destroy(struct proc *proc)
 	}
 #endif // UW
 #ifdef OPT_A2
-	//allprocs[proc->pid] = NULL;
-	childprocs[proc->pid] = NULL;
+	allprocs[proc->pid] = NULL;
 	lock_destroy(proc->proc_lock);
 	cv_destroy(proc->proc_cv);
 #endif
@@ -315,30 +314,10 @@ KASSERT(proc->proc_cv);
 
 proc->ifalive = true;
 
-/*
-lock_acquire(childprocs);
-
-if (pid_incre >= 66) {
-	lock_release(allprocs_lock);
-	kfree(proc);
-	return NULL;
-}
-lock_release(allprocs_lock);
-*/
-/*
-lock_acquire(proc->proc_lock);
-proc->pid = pid_incre;
-pid_incre++;
-proc->ifalive = true;
-lock_release(proc->proc_lock);
-*/
-
 lock_acquire(allprocs_lock);
 allprocs[proc->pid] = proc;
 lock_release(allprocs_lock);
-//lock_acquire(childprocs_lock);
-//childprocs[proc->pid] = proc;
-//lock_release(childprocs_lock);
+
 #endif
 
 	return proc;
