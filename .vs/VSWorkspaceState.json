@@ -1,0 +1,16 @@
+{
+  "ExpandedNodes": [
+    "",
+    "\\os161-1.99",
+    "\\os161-1.99\\kern",
+    "\\os161-1.99\\kern\\arch",
+    "\\os161-1.99\\kern\\arch\\mips",
+    "\\os161-1.99\\kern\\arch\\mips\\syscall",
+    "\\os161-1.99\\kern\\include\\kern",
+    "\\os161-1.99\\kern\\proc",
+    "\\os161-1.99\\kern\\synchprobs",
+    "\\os161-1.99\\kern\\syscall"
+  ],
+  "SelectedNode": "\\os161-1.99\\kern\\arch\\mips\\syscall\\syscall.c",
+  "PreviewInSolutionExplorer": false
+}
