@@ -49,6 +49,7 @@ struct semaphore;
 #ifdef OPT_A2
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 int volatile parent_pid_incre;
 //int volatile child_pid_incre;
 struct proc *parentTable[64];
@@ -62,6 +63,9 @@ extern int volatile pid_incre;
 =======
 extern int volatile pid_incre;
 >>>>>>> parent of 8dbdaff... updateA2_13
+=======
+int volatile pid_incre;
+>>>>>>> a410c871d05ac9cb133bd70eeba31551e689ca3c
 #endif
 /*
  * Process structure.
@@ -80,11 +84,8 @@ struct proc {
 #ifdef OPT_A2
 	pid_t pid;
 	pid_t parent_pid;
-	int exitcode;
-	bool firstGenChild;
-	bool ifalive;
 	struct lock *proc_lock;
-	struct cv *proc_cv;
+	//struct cv *proc_cv;
 #endif
 #ifdef UW
   /* a vnode to refer to the console device */
