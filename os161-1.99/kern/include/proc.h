@@ -50,10 +50,10 @@ struct semaphore;
 int volatile pid_incre;
 struct proc *allprocs[64];
 struct proc *childprocs[64];
-//struct proc *parentprocs[66];
+struct proc *parentprocs[66];
 struct lock *allprocs_lock;
 struct lock *childprocs_lock;
-//struct lock *parentprocs_lock;
+struct lock *parentprocs_lock;
 
 #endif
 /*
