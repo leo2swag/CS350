@@ -75,6 +75,7 @@ struct proc {
 	pid_t parent_pid;
 	bool ifalive;
 	int exitcode;
+	int childexit[64];
 	struct lock *proc_lock;
 	struct cv *proc_cv;
 #endif

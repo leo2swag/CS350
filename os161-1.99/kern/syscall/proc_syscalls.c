@@ -95,6 +95,15 @@ void sys__exit(int exitcode) {
 #ifdef OPT_A2
   if (p->parent_pid != -1) {
 	 
+	  lock_acquire(childprocs_lock);
+	  struct proc *pp = childprocs[p->parent_pid];
+	  if (pp != NULL) {
+		  pp->childexit[p->pid] = _MKWAIT_EXIT(exitcode);
+	  }
+	  childprocs[p->pid] = NULL;
+	  lock_release(childprocs_lock);
+
+	  /*
 	  lock_acquire(p->proc_lock);
 	  p->ifalive = false;
 	  p->exitcode = _MKWAIT_EXIT(exitcode);
@@ -103,6 +112,7 @@ void sys__exit(int exitcode) {
 	  lock_acquire(childprocs_lock);
 	  childprocs[p->pid] = NULL;
 	  lock_release(childprocs_lock);
+	  */
 
 	  lock_acquire(p->proc_lock);
 	  cv_signal(p->proc_cv, p->proc_lock);
@@ -183,17 +193,22 @@ sys_waitpid(pid_t pid,
   if (child == NULL) {
 	  return ESRCH;
   }
+  else {
+	  cv_wait(child->proc_cv, childprocs_lock);
+  }
   lock_release(childprocs_lock);
 
-  lock_acquire(child->proc_lock);
+  lock_acquire(curproc->proc_lock);
+  /*
   if (child->parent_pid != curproc->pid) {
 	  return EPERM;
   }
   if (child->ifalive) {
 	  cv_wait(child->proc_cv, child->proc_lock);
-  }
-  exitstatus = child->exitcode;
-  lock_release(child->proc_lock);
+  }*/
+  //exitstatus = child->exitcode;
+  exitstatus = curproc->childexit[pid];
+  lock_release(curproc->proc_lock);
 
 
 #else
