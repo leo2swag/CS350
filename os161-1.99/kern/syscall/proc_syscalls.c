@@ -189,10 +189,11 @@ sys_waitpid(pid_t pid,
 #ifdef OPT_A2
   lock_acquire(childprocs_lock);
   struct proc *child = childprocs[pid];
-  if (child == NULL) {
-	  return ESRCH;
-  }
-  else {
+  //if (child == NULL) {
+//	  return ESRCH;
+  //}
+  //else {
+  if (child != NULL) {
 	  cv_wait(child->proc_cv, childprocs_lock);
   }
   lock_release(childprocs_lock);
