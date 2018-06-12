@@ -224,8 +224,8 @@ proc_bootstrap(void)
 
 #ifdef OPT_A2
   pid_incre = 2;
-  //allprocs_lock = lock_create("allprocs_lock");
-  //KASSERT(allprocs_lock);
+  allprocs_lock = lock_create("allprocs_lock");
+  KASSERT(allprocs_lock);
   //parentprocs_lock = lock_create("parentprocs_lock");
   //KASSERT(parentprocs_lock);
   childprocs_lock = lock_create("childprocs_lock");
