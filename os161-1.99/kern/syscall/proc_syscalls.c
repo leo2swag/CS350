@@ -66,8 +66,7 @@ sys_fork(struct trapframe *parent_tf, pid_t *retval) {
 	  parentprocs[curproc->pid] = curproc;
   }
   lock_release(parentprocs_lock);
-
-  curproc->childarry = array_add(curproc->childarry, child, NULL);
+  array_add(curproc->childarry, child, NULL);
 
   //create thread
   struct trapframe *child_tf = kmalloc(sizeof(struct trapframe));
