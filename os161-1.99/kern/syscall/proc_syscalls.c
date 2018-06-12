@@ -121,7 +121,6 @@ void sys__exit(int exitcode) {
 		cv_signal(p->proc_cv, p->proc_lock);
 		lock_release(p->proc_lock);
 	}
-}
 
 #else
   (void)exitcode;
