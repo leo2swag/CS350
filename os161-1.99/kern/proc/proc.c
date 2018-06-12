@@ -70,8 +70,14 @@ static struct semaphore *proc_count_mutex;
 struct semaphore *no_proc_sem;   
 #endif  // UW
 
-
-
+#ifdef OPT_A2
+int volatile pid_incre;
+//struct proc *allprocs[66];
+struct proc *childprocs[66];
+//struct proc *parentprocs[66];
+//struct lock *allprocs_lock;
+struct lock *childprocs_lock;
+#endif
 /*
  * Create a proc structure.
  */
@@ -291,6 +297,11 @@ proc_create_runprogram(const char *name)
 proc->parent_pid = -1;
 
 lock_acquire(childprocs_lock);
+if (pid_incre >= 64) {
+	lock_release(childprocs_lock);
+	kfree(proc);
+	return NULL;
+}
 proc->pid = pid_incre++;
 lock_release(childprocs_lock);
 
