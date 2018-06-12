@@ -164,7 +164,8 @@ proc_destroy(struct proc *proc)
 	}
 #endif // UW
 #ifdef OPT_A2
-	allprocs[proc->pid] = NULL;
+	//allprocs[proc->pid] = NULL;
+	childprocs[proc->pid] = NULL;
 	lock_destroy(proc->proc_lock);
 	cv_destroy(proc->proc_cv);
 #endif
@@ -217,10 +218,10 @@ proc_bootstrap(void)
 
 #ifdef OPT_A2
   pid_incre = 2;
-  allprocs_lock = lock_create("allprocs_lock");
-  KASSERT(allprocs_lock);
-  parentprocs_lock = lock_create("parentprocs_lock");
-  KASSERT(parentprocs_lock);
+  //allprocs_lock = lock_create("allprocs_lock");
+  //KASSERT(allprocs_lock);
+  //parentprocs_lock = lock_create("parentprocs_lock");
+  //KASSERT(parentprocs_lock);
   childprocs_lock = lock_create("childprocs_lock");
   KASSERT(childprocs_lock);
 #endif
@@ -293,13 +294,16 @@ KASSERT(proc->proc_lock);
 proc->proc_cv = cv_create(name);
 KASSERT(proc->proc_cv);
 
-lock_acquire(allprocs_lock);
+/*
+lock_acquire(childprocs);
+
 if (pid_incre >= 66) {
 	lock_release(allprocs_lock);
 	kfree(proc);
 	return NULL;
 }
 lock_release(allprocs_lock);
+*/
 
 lock_acquire(proc->proc_lock);
 proc->pid = pid_incre;
@@ -307,9 +311,12 @@ pid_incre++;
 proc->ifalive = true;
 lock_release(proc->proc_lock);
 
-lock_acquire(allprocs_lock);
-allprocs[proc->pid] = proc;
-lock_release(allprocs_lock);
+//lock_acquire(allprocs_lock);
+//allprocs[proc->pid] = proc;
+//lock_release(allprocs_lock);
+lock_acquire(childprocs);
+childprocs[proc->pid] = proc;
+lock_release(childprocs);
 #endif
 
 	return proc;
