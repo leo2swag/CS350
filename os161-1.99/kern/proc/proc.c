@@ -163,6 +163,10 @@ proc_destroy(struct proc *proc)
 	  vfs_close(proc->console);
 	}
 #endif // UW
+#ifdef OPT_A2
+	allprocs[proc->pid] = NULL;
+	lock_destroy(proc->proc_lock);
+#endif
 
 	threadarray_cleanup(&proc->p_threads);
 	spinlock_cleanup(&proc->p_lock);
@@ -212,6 +216,8 @@ proc_bootstrap(void)
 
 #ifdef OPT_A2
   pid_incre = 2;
+  allprocs_lock = lock_create("allprocs_lock");
+  KASSERT(allprocs_lock);
 #endif
 }
 
@@ -279,6 +285,11 @@ proc_create_runprogram(const char *name)
 proc->parent_pid = -1;
 proc->proc_lock = lock_create(name);
 KASSERT(proc->proc_lock);
+proc->pid = pid_incre;
+pid_incre++;
+lock_acquire(allprocs_lock);
+allprocs[proc->pid] = proc;
+lock_release(allprocs_lock);
 #endif
 
 	return proc;
