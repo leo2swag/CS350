@@ -47,13 +47,7 @@ struct semaphore;
 #endif // UW
 
 #ifdef OPT_A2
-int volatile parent_pid_incre;
-//int volatile child_pid_incre;
-struct proc *parentTable[64];
-//struct proc *childTable[64];
-struct lock *parent_table_lock;
-//struct lock *child_table_lock;
-
+int volatile pid_incre;
 #endif
 /*
  * Process structure.
@@ -72,11 +66,8 @@ struct proc {
 #ifdef OPT_A2
 	pid_t pid;
 	pid_t parent_pid;
-	int exitcode;
-	bool firstGenChild;
-	bool ifalive;
 	struct lock *proc_lock;
-	struct cv *proc_cv;
+	//struct cv *proc_cv;
 #endif
 #ifdef UW
   /* a vnode to refer to the console device */
