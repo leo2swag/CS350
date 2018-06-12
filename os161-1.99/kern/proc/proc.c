@@ -228,9 +228,9 @@ proc_bootstrap(void)
   parent_table_lock = lock_create("parent_table_lock");
   KASSERT(parent_table_lock);
 
-  child_pid_incre = 2;
-  child_table_lock = lock_create("child_table_lock");
-  KASSERT(child_table_lock);
+  //child_pid_incre = 2;
+  //child_table_lock = lock_create("child_table_lock");
+  //KASSERT(child_table_lock);
 
 #endif
 }
