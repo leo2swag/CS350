@@ -86,37 +86,42 @@ sys_fork(struct trapframe *parent_tf, pid_t *retval) {
 
 void sys__exit(int exitcode) {
 
-  struct addrspace *as;
-  struct proc *p = curproc;
-  /* for now, just include this to keep the compiler from complaining about
-     an unused variable */
+	struct addrspace *as;
+	struct proc *p = curproc;
+	/* for now, just include this to keep the compiler from complaining about
+	   an unused variable */
 #ifdef OPT_A2
-  if (p->parent_pid != -1) {
-	 
-	  /*
-	  lock_acquire(childprocs_lock);
-	  struct proc *pp = childprocs[p->parent_pid];
-	  if (pp != NULL) {
-		  pp->childexit[p->pid] = _MKWAIT_EXIT(exitcode);
-	  }
-	  childprocs[p->pid] = NULL;
-	  lock_release(childprocs_lock);
-	  */
-	  
-	  lock_acquire(p->proc_lock);
-	  p->ifalive = false;
-	  p->exitcode = _MKWAIT_EXIT(exitcode);
-	  lock_release(p->proc_lock);
-	  
-	  lock_acquire(childprocs_lock);
-	  childprocs[p->pid] = NULL;
-	  lock_release(childprocs_lock);
-	  
 
-	  lock_acquire(p->proc_lock);
-	  cv_signal(p->proc_cv, p->proc_lock);
-	  lock_release(p->proc_lock);
-  }
+
+	   /*
+	   lock_acquire(childprocs_lock);
+	   struct proc *pp = childprocs[p->parent_pid];
+	   if (pp != NULL) {
+		   pp->childexit[p->pid] = _MKWAIT_EXIT(exitcode);
+	   }
+	   childprocs[p->pid] = NULL;
+	   lock_release(childprocs_lock);
+	   */
+
+	if (p->parent_pid != -1) { //curproc is not origin parent
+		struct proc *parent = allprocs[p->parent_pid];
+		lock_acquire(parent->proc_lock);
+		if (parent->ifalive) {
+			p->ifalive = false;
+			p->exitcode = _MKWAIT_EXIT(exitcode);
+		}
+		lock_release(parent->proc_lock);
+
+		lock_acquire(childprocs_lock);
+		childprocs[p->pid] = NULL;
+		lock_release(childprocs_lock);
+
+
+		lock_acquire(p->proc_lock);
+		cv_signal(p->proc_cv, p->proc_lock);
+		lock_release(p->proc_lock);
+	}
+}
 
 #else
   (void)exitcode;
