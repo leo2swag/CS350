@@ -299,6 +299,8 @@ KASSERT(proc->proc_cv);
 
 lock_acquire(proc->proc_lock);
 proc->ifalive = true;
+proc->childarry = array_create();
+array_init(proc->childarry);
 lock_release(proc->proc_lock);
 
 lock_acquire(allprocs_lock);

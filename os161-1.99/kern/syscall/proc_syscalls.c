@@ -66,7 +66,8 @@ sys_fork(struct trapframe *parent_tf, pid_t *retval) {
 	  parentprocs[curproc->pid] = curproc;
   }
   lock_release(parentprocs_lock);
-  
+
+  curproc->childarry = array_add(curproc->childarry, child, NULL);
 
   //create thread
   struct trapframe *child_tf = kmalloc(sizeof(struct trapframe));
@@ -110,6 +111,7 @@ void sys__exit(int exitcode) {
 			p->ifalive = false;
 			p->exitcode = _MKWAIT_EXIT(exitcode);
 		}
+	
 		lock_release(parent->proc_lock);
 
 
@@ -117,6 +119,7 @@ void sys__exit(int exitcode) {
 		cv_signal(p->proc_cv, p->proc_lock);
 		lock_release(p->proc_lock);
 	}
+	
 
 #else
   (void)exitcode;
@@ -200,20 +203,6 @@ sys_waitpid(pid_t pid,
   }
   exitstatus = child->exitcode;
   lock_release(child->proc_lock);
-
-
-  //lock_acquire(curproc->proc_lock);
-  /*
-  if (child->parent_pid != curproc->pid) {
-	  return EPERM;
-  }
-  if (child->ifalive) {
-	  cv_wait(child->proc_cv, child->proc_lock);
-  }*/
-  //exitstatus = child->exitcode;
-  //exitstatus = curproc->childexit[pid];
-  //lock_release(curproc->proc_lock);
-
 
 #else
   exitstatus = 0;

@@ -78,6 +78,7 @@ struct proc {
 	int childexit[64];
 	struct lock *proc_lock;
 	struct cv *proc_cv;
+	struct array* childarry;
 #endif
 #ifdef UW
   /* a vnode to refer to the console device */
