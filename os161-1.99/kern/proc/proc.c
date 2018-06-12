@@ -296,7 +296,6 @@ proc_create_runprogram(const char *name)
 #ifdef OPT_A2
 proc->parent_pid = -1;
 
-
 lock_acquire(childprocs_lock);
 /*
 if (pid_incre >= 64) {
@@ -304,7 +303,8 @@ if (pid_incre >= 64) {
 	kfree(proc);
 	return NULL;
 }*/
-proc->pid = pid_incre++;
+proc->pid = pid_incre;
+pid_incre++;
 lock_release(childprocs_lock);
 
 
@@ -312,6 +312,8 @@ proc->proc_lock = lock_create(name);
 KASSERT(proc->proc_lock);
 proc->proc_cv = cv_create(name);
 KASSERT(proc->proc_cv);
+
+proc->ifalive = true;
 
 /*
 lock_acquire(childprocs);
