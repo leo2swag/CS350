@@ -74,11 +74,13 @@ sys_fork(struct trapframe *parent_tf, pid_t *retval) {
   struct trapframe *child_tf = kmalloc(sizeof(struct trapframe));
   memcpy(child_tf, parent_tf, sizeof(struct trapframe));
   int thread_det = thread_fork(child->p_name, child, forked_process, child_tf, 0);
+  /*
   if (thread_det) {
     kfree(child_addre);
     proc_destroy(child);
     return thread_det;
   }
+  */
 
   *retval = child->pid;
   return 0;

@@ -293,6 +293,14 @@ KASSERT(proc->proc_lock);
 proc->proc_cv = cv_create(name);
 KASSERT(proc->proc_cv);
 
+lock_acquire(allprocs_lock);
+if (pid_incre >= 66) {
+	lock_release(allprocs_lock);
+	kfree(proc);
+	return NULL;
+}
+lock_release(allprocs_lock);
+
 lock_acquire(proc->proc_lock);
 proc->pid = pid_incre;
 pid_incre++;
