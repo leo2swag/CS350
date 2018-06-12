@@ -60,7 +60,6 @@ sys_fork(struct trapframe *parent_tf, pid_t *retval) {
   childprocs[child->pid] = child;
   lock_release(childprocs_lock);
 
-  
   //if curporc, assign to parent
   lock_acquire(parentprocs_lock);
   if (curproc->parent_pid == -1) {
@@ -189,10 +188,10 @@ sys_waitpid(pid_t pid,
 #ifdef OPT_A2
   lock_acquire(childprocs_lock);
   struct proc *child = childprocs[pid];
-  //if (child == NULL) {
-//	  return ESRCH;
-  //}
-  //else {
+  if (child == NULL) {
+	  return ESRCH;
+  }
+
   if (child != NULL) {
 	  cv_wait(child->proc_cv, childprocs_lock);
   }
