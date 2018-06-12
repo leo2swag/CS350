@@ -195,8 +195,8 @@ sys_waitpid(pid_t pid,
   lock_release(childprocs_lock);
 
   lock_acquire(child->proc_lock);
-  if (child != NULL) {
-	  cv_wait(child->proc_cv, childprocs_lock);
+  if (child->ifalive) {
+	  cv_wait(child->proc_cv, child->proc_lock);
   }
   exitstatus = child->exitcode;
   lock_release(child->proc_lock);
