@@ -164,6 +164,20 @@ proc_destroy(struct proc *proc)
 	}
 #endif // UW
 
+	#ifdef OPT_A2
+/*
+	if (proc->parent_pid == -1) {
+		parentTable[proc->pid] = NULL; //current proc is parent
+	}
+	else {
+		childTable[proc->pid] = NULL; //either current proc is child or grandchild
+	}
+	*/
+	parentTable[proc->pid] = NULL;
+	lock_destroy(proc->proc_lock);
+	cv_destroy(proc->proc_cv);
+	#endif
+
 	threadarray_cleanup(&proc->p_threads);
 	spinlock_cleanup(&proc->p_lock);
 
@@ -184,17 +198,6 @@ proc_destroy(struct proc *proc)
 	}
 	V(proc_count_mutex);
 #endif // UW
-
-#ifdef OPT_A2
-	if (proc->parent_pid == -1) {
-		parentTable[proc->pid] = NULL; //current proc is parent
-	}
-	else {
-		childTable[proc->pid] = NULL; //either current proc is child or grandchild
-	}
-	lock_destroy(proc->proc_lock);
-	cv_destroy(proc->proc_cv);
-#endif
 
 }
 
@@ -225,9 +228,9 @@ proc_bootstrap(void)
   parent_table_lock = lock_create("parent_table_lock");
   KASSERT(parent_table_lock);
 
-  child_pid_incre = 2;
-  child_table_lock = lock_create("child_table_lock");
-  KASSERT(child_table_lock);
+  //child_pid_incre = 2;
+  //child_table_lock = lock_create("child_table_lock");
+  //KASSERT(child_table_lock);
 
 #endif
 }
@@ -296,6 +299,7 @@ proc_create_runprogram(const char *name)
 #ifdef OPT_A2
 proc->parent_pid = -1;
 proc->pid = parent_pid_incre;
+parent_pid_incre++;
 proc->ifalive = true;
 proc->firstGenChild = false;
 proc->proc_lock = lock_create(name);
@@ -305,7 +309,6 @@ KASSERT(proc->proc_cv);
 
 lock_acquire(parent_table_lock);
 parentTable[proc->pid] = proc;
-parent_pid_incre++;
 lock_release(parent_table_lock);
 #endif
 

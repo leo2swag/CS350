@@ -53,18 +53,24 @@ sys_fork(struct trapframe *parent_tf, pid_t *retval) {
   //assign pid
   lock_acquire(child->proc_lock);
   child->parent_pid = curproc->pid;
-  child->pid = child_pid_incre;
+  //child->pid = parent_pid_incre;
+  //child->pid = child_pid_incre;
   child->ifalive = true;
-  if (curproc->parent_pid == -1) {
-	  child->firstGenChild = true;
-  } else {
-	  child->firstGenChild = false;
-	  }
   lock_release(child->proc_lock);
-  lock_acquire(child_table_lock);
-  childTable[child_pid_incre] = child;
-  child_pid_incre++;
-  lock_release(child_table_lock);
+  //if (curproc->parent_pid == -1) {
+	//  child->firstGenChild = true;
+  //} else {
+	//  child->firstGenChild = false;
+	//  }
+  //lock_release(child->proc_lock);
+  //lock_acquire(parent_table_lock);
+  //parentTable[parent_pid_incre] = child;
+  //parent_pid_incre++;
+  //lock_release(parent_table_lock);
+  //lock_acquire(child_table_lock);
+  //childTable[child_pid_incre] = child;
+  //child_pid_incre++;
+  //lock_release(child_table_lock);
 
   //create thread
   struct trapframe *child_tf = kmalloc(sizeof(struct trapframe));
@@ -91,18 +97,19 @@ void sys__exit(int exitcode) {
 
 #ifdef OPT_A2
   if (p->parent_pid != -1) { //curproc is not parent
-	  struct proc *parent;
 	  lock_acquire(parent_table_lock);
-	  if (p->firstGenChild) {
-		  parent = parentTable[p->parent_pid];
-	  }
-	  lock_release(parent_table_lock);
+	  //if (p->firstGenChild) {
+		//  parent = parentTable[p->parent_pid];
+    //}
+    struct proc *parent = parentTable[p->parent_pid];
+    lock_release(parent_table_lock);
+    /*
 	  lock_acquire(child_table_lock);
 	  if (p->firstGenChild == false) {
 		  parent = childTable[p->parent_pid];
 	  }
 	  lock_release(child_table_lock);
-
+    */
 	  lock_acquire(parent->proc_lock);
 	  if (parent != NULL) { //parent lives
 		  p->ifalive = false;
@@ -110,9 +117,12 @@ void sys__exit(int exitcode) {
 	  }
 	  lock_release(parent->proc_lock);
 
-	  lock_acquire(child_table_lock);
-	  childTable[p->pid] = NULL;
-	  lock_release(child_table_lock);
+	  //lock_acquire(child_table_lock);
+	  //childTable[p->pid] = NULL;
+    //lock_release(child_table_lock);
+    lock_acquire(parent_table_lock);
+    parentTable[p->pid] = NULL;
+    lock_release(parent_table_lock);
 
 	  lock_acquire(p->proc_lock);
 	  cv_signal(p->proc_cv, p->proc_lock);
@@ -190,12 +200,15 @@ sys_waitpid(pid_t pid,
   }
 
 #ifdef OPT_A2
-  lock_acquire(child_table_lock);
-  struct proc *child = childTable[pid];
+  //lock_acquire(child_table_lock);
+  lock_acquire(parent_table_lock);
+  //struct proc *child = childTable[pid];
+  struct proc *child = parentTable[pid];
   if (child == NULL) {
 	  return ESRCH; // happens only if child process is not here 
   }
-  lock_release(child_table_lock);
+  //lock_release(child_table_lock);
+  lock_release(parent_table_lock);
 
   lock_acquire(child->proc_lock);
   if (child->parent_pid != curproc->pid) {
