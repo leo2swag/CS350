@@ -296,12 +296,14 @@ proc_create_runprogram(const char *name)
 #ifdef OPT_A2
 proc->parent_pid = -1;
 
+
 lock_acquire(childprocs_lock);
+/*
 if (pid_incre >= 64) {
 	lock_release(childprocs_lock);
 	kfree(proc);
 	return NULL;
-}
+}*/
 proc->pid = pid_incre++;
 lock_release(childprocs_lock);
 
@@ -329,12 +331,12 @@ proc->ifalive = true;
 lock_release(proc->proc_lock);
 */
 
-//lock_acquire(allprocs_lock);
-//allprocs[proc->pid] = proc;
-//lock_release(allprocs_lock);
-lock_acquire(childprocs_lock);
-childprocs[proc->pid] = proc;
-lock_release(childprocs_lock);
+lock_acquire(allprocs_lock);
+allprocs[proc->pid] = proc;
+lock_release(allprocs_lock);
+//lock_acquire(childprocs_lock);
+//childprocs[proc->pid] = proc;
+//lock_release(childprocs_lock);
 #endif
 
 	return proc;
