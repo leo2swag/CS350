@@ -1,3 +1,4 @@
+#include "opt-A2.h"
 /*
  * Copyright (c) 2000, 2001, 2002, 2003, 2004, 2005, 2008, 2009
  *	The President and Fellows of Harvard College.
@@ -29,8 +30,6 @@
 
 #ifndef _SYSCALL_H_
 #define _SYSCALL_H_
-
-#include "opt-A2.h"
 
 
 struct trapframe; /* from <machine/trapframe.h> */
@@ -69,9 +68,8 @@ int sys_waitpid(pid_t pid, userptr_t status, int options, pid_t *retval);
 #endif // UW
 
 #ifdef OPT_A2
-	void entryptfn(void* a, unsigned long b);
-	int sys_fork(struct trapframe *parent_tf, pid_t* retval);
-	int sys_execv(userptr_t* program, userptr_t* args);
+void forked_process(void *tf, unsigned long data);
+int sys_fork(struct trapframe *parent_tf, pid_t *retval);
 #endif
 
 #endif /* _SYSCALL_H_ */
