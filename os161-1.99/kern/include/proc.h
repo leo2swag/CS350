@@ -49,7 +49,12 @@ struct semaphore;
 #ifdef OPT_A2
 int volatile pid_incre;
 struct proc *allprocs[64];
+struct proc *childprocs[64];
+struct proc *parentprocs[64];
 struct lock *allprocs_lock;
+struct lock *childprocs_lock;
+struct lock *parentprocs_lock;
+
 #endif
 /*
  * Process structure.

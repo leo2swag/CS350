@@ -285,8 +285,12 @@ proc_create_runprogram(const char *name)
 proc->parent_pid = -1;
 proc->proc_lock = lock_create(name);
 KASSERT(proc->proc_lock);
+
+lock_acquire(proc->proc_lock);
 proc->pid = pid_incre;
 pid_incre++;
+lock_release(proc->proc_lock);
+
 lock_acquire(allprocs_lock);
 allprocs[proc->pid] = proc;
 lock_release(allprocs_lock);
