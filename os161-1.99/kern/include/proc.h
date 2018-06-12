@@ -47,12 +47,12 @@ struct semaphore;
 #endif // UW
 
 #ifdef OPT_A2
-extern int volatile pid_incre;
+int volatile pid_incre;
 struct proc *allprocs[64];
-extern struct proc *childprocs[64];
+struct proc *childprocs[64];
 //struct proc *parentprocs[66];
 struct lock *allprocs_lock;
-extern struct lock *childprocs_lock;
+struct lock *childprocs_lock;
 //struct lock *parentprocs_lock;
 
 #endif
