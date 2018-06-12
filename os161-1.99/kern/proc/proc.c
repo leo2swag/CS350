@@ -314,9 +314,9 @@ lock_release(proc->proc_lock);
 //lock_acquire(allprocs_lock);
 //allprocs[proc->pid] = proc;
 //lock_release(allprocs_lock);
-lock_acquire(childprocs);
+lock_acquire(childprocs_lock);
 childprocs[proc->pid] = proc;
-lock_release(childprocs);
+lock_release(childprocs_lock);
 #endif
 
 	return proc;
