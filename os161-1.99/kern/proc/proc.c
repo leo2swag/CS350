@@ -166,6 +166,7 @@ proc_destroy(struct proc *proc)
 #ifdef OPT_A2
 	allprocs[proc->pid] = NULL;
 	lock_destroy(proc->proc_lock);
+	cv_destroy(proc->proc_cv);
 #endif
 
 	threadarray_cleanup(&proc->p_threads);
@@ -289,10 +290,13 @@ proc_create_runprogram(const char *name)
 proc->parent_pid = -1;
 proc->proc_lock = lock_create(name);
 KASSERT(proc->proc_lock);
+proc->proc_cv = cv_create(name);
+KASSERT(proc->proc_cv);
 
 lock_acquire(proc->proc_lock);
 proc->pid = pid_incre;
 pid_incre++;
+proc->ifalive = true;
 lock_release(proc->proc_lock);
 
 lock_acquire(allprocs_lock);

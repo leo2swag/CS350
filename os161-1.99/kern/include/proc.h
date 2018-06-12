@@ -73,8 +73,10 @@ struct proc {
 #ifdef OPT_A2
 	pid_t pid;
 	pid_t parent_pid;
+	bool ifalive;
+	int exitcode;
 	struct lock *proc_lock;
-	//struct cv *proc_cv;
+	struct cv *proc_cv;
 #endif
 #ifdef UW
   /* a vnode to refer to the console device */

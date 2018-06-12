@@ -57,10 +57,12 @@ sys_fork(struct trapframe *parent_tf, pid_t *retval) {
 
   //assign to children
   lock_acquire(childprocs_lock);
-  childprocs[child->pid] = child;
+  if (curproc->parent_pid != -1) {
+	  childprocs[child->pid] = child;
+  }
   lock_release(childprocs_lock);
 
-  //if assign to parent
+  //if curporc, assign to parent
   lock_acquire(parentprocs_lock);
   if (curproc->parent_pid == -1) {
 	  parentprocs[curproc->pid] = curproc;
@@ -89,8 +91,31 @@ void sys__exit(int exitcode) {
   struct proc *p = curproc;
   /* for now, just include this to keep the compiler from complaining about
      an unused variable */
-  (void)exitcode;
+#ifdef OPT_A2
+  if (p->parent_pid != -1) {
+	  struct proc *childparent = childprocs[p->parent_pid]; //parent_pid not -1 meaning not the ori parent
+	  if (childparent == NULL) {
+		  return ESRCH;
+	  }
+	  lock_acquire(p->proc_lock);
+	  p->ifalive = false;
+	  p->exitcode = _MKWAIT_EXIT(exitcode);
+	  lock_release(p->proc_lock);
 
+	  lock_acquire(childprocs_lock);
+	  childprocs[p->pid] = NULL;
+	  lock_release(childprocs_lock);
+
+	  lock_acquire(p->proc_lock);
+	  cv_signal(p->proc_cv, p->proc_lock);
+	  lock_release(p->proc_lock);
+  }
+  else {
+	  struct proc *parent = parentprocs[p->parent_pid];
+  }
+#else
+  (void)exitcode;
+#endif
   DEBUG(DB_SYSCALL,"Syscall: _exit(%d)\n",exitcode);
 
   KASSERT(curproc->p_addrspace != NULL);
@@ -156,7 +181,28 @@ sys_waitpid(pid_t pid,
     return(EINVAL);
   }
   /* for now, just pretend the exitstatus is 0 */
+#ifdef OPT_A2
+  lock_acquire(childprocs_lock);
+  struct proc *child = childprocs[pid];
+  if (child == NULL) {
+	  return ESRCH;
+  }
+  lock_release(childprocs_lock);
+
+  lock_acquire(child->proc_lock);
+  if (child->parent_pid != curproc->pid) {
+	  return EPERM;
+  }
+  if (child->ifalive) {
+	  cv_wait(child->proc_cv, child->proc_lock);
+  }
+  exitstatus = child->exitcode;
+  lock_release(child->proc_lock);
+
+
+#else
   exitstatus = 0;
+#endif
   result = copyout((void *)&exitstatus,status,sizeof(int));
   if (result) {
     return(result);
