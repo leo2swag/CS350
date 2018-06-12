@@ -53,19 +53,20 @@ sys_fork(struct trapframe *parent_tf, pid_t *retval) {
   //assign pid
   lock_acquire(child->proc_lock);
   child->parent_pid = curproc->pid;
-  child->pid = parent_pid_incre;
+  //child->pid = parent_pid_incre;
   //child->pid = child_pid_incre;
   child->ifalive = true;
-  if (curproc->parent_pid == -1) {
-	  child->firstGenChild = true;
-  } else {
-	  child->firstGenChild = false;
-	  }
   lock_release(child->proc_lock);
-  lock_acquire(parent_table_lock);
-  parentTable[parent_pid_incre] = child;
-  parent_pid_incre++;
-  lock_release(parent_table_lock);
+  //if (curproc->parent_pid == -1) {
+	//  child->firstGenChild = true;
+  //} else {
+	//  child->firstGenChild = false;
+	//  }
+  //lock_release(child->proc_lock);
+  //lock_acquire(parent_table_lock);
+  //parentTable[parent_pid_incre] = child;
+  //parent_pid_incre++;
+  //lock_release(parent_table_lock);
   //lock_acquire(child_table_lock);
   //childTable[child_pid_incre] = child;
   //child_pid_incre++;

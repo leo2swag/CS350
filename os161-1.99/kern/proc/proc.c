@@ -176,7 +176,7 @@ proc_destroy(struct proc *proc)
 	parentTable[proc->pid] = NULL;
 	lock_destroy(proc->proc_lock);
 	cv_destroy(proc->proc_cv);
-#endif
+	#endif
 
 	threadarray_cleanup(&proc->p_threads);
 	spinlock_cleanup(&proc->p_lock);
