@@ -106,7 +106,7 @@ void sys__exit(int exitcode) {
 	if (p->parent_pid != -1) { //curproc is not origin parent
 		struct proc *parent = allprocs[p->parent_pid];
 		lock_acquire(parent->proc_lock);
-		if (parent->ifalive) {
+		if (parent != NULL) {
 			p->ifalive = false;
 			p->exitcode = _MKWAIT_EXIT(exitcode);
 		}
@@ -199,7 +199,7 @@ sys_waitpid(pid_t pid,
   lock_release(childprocs_lock);
 
   lock_acquire(child->proc_lock);
-  if (child->ifalive) {
+  if (child != NULL) {
 	  cv_wait(child->proc_cv, child->proc_lock);
   }
   exitstatus = child->exitcode;
