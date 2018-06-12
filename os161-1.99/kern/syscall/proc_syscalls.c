@@ -202,7 +202,7 @@ sys_waitpid(pid_t pid,
   lock_release(child->proc_lock);
 
 
-  l//ock_acquire(curproc->proc_lock);
+  //lock_acquire(curproc->proc_lock);
   /*
   if (child->parent_pid != curproc->pid) {
 	  return EPERM;
