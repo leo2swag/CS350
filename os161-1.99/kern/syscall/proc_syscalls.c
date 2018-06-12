@@ -48,10 +48,11 @@ sys_fork(struct trapframe *parent_tf, pid_t *retval) {
     proc_destroy(child);
     return copy_det;
   }
+
+  lock_acquire(child->proc_lock);
   child->p_addrspace = child_addre;
   
   //assign pid
-  lock_acquire(child->proc_lock);
   child->parent_pid = curproc->pid;
   lock_release(child->proc_lock);
 
@@ -97,9 +98,13 @@ void sys__exit(int exitcode) {
 	  lock_acquire(p->proc_lock);
 	  p->ifalive = false;
 	  p->exitcode = _MKWAIT_EXIT(exitcode);
+	  lock_release(p->proc_lock);
 
+	  lock_acquire(childprocs_lock);
 	  childprocs[p->pid] = NULL;
+	  lock_release(childprocs_lock);
 
+	  lock_acquire(p->proc_lock);
 	  cv_signal(p->proc_cv, p->proc_lock);
 	  lock_release(p->proc_lock);
   }
