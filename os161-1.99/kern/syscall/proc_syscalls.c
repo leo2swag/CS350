@@ -51,18 +51,15 @@ sys_fork(struct trapframe *parent_tf, pid_t *retval) {
 
   lock_acquire(child->proc_lock);
   child->p_addrspace = child_addre;
-  
   //assign pid
   child->parent_pid = curproc->pid;
   lock_release(child->proc_lock);
 
-
-  
   //assign to children
   lock_acquire(childprocs_lock);
   childprocs[child->pid] = child;
-
   lock_release(childprocs_lock);
+
   /*
   //if curporc, assign to parent
   lock_acquire(parentprocs_lock);
@@ -75,14 +72,12 @@ sys_fork(struct trapframe *parent_tf, pid_t *retval) {
   //create thread
   struct trapframe *child_tf = kmalloc(sizeof(struct trapframe));
   memcpy(child_tf, parent_tf, sizeof(struct trapframe));
-  thread_fork(child->p_name, child, forked_process, child_tf, 0);
-  /*
+  int thread_det = thread_fork(child->p_name, child, forked_process, child_tf, 0);
   if (thread_det) {
     kfree(child_addre);
     proc_destroy(child);
     return thread_det;
   }
-  */
 
   *retval = child->pid;
   return 0;
@@ -194,10 +189,10 @@ sys_waitpid(pid_t pid,
 #ifdef OPT_A2
   lock_acquire(childprocs_lock);
   struct proc *child = childprocs[pid];
-  //if (child == NULL) {
-//	  return ESRCH;
- // }
- // else {
+  if (child == NULL) {
+	  return ESRCH;
+  }
+  else {
   if (child != NULL) {
 	  cv_wait(child->proc_cv, childprocs_lock);
   }
