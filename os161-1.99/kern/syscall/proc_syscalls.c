@@ -97,13 +97,9 @@ void sys__exit(int exitcode) {
 	  lock_acquire(p->proc_lock);
 	  p->ifalive = false;
 	  p->exitcode = _MKWAIT_EXIT(exitcode);
-	  lock_release(p->proc_lock);
 
-	  lock_acquire(childprocs_lock);
 	  childprocs[p->pid] = NULL;
-	  lock_release(childprocs_lock);
 
-	  lock_acquire(p->proc_lock);
 	  cv_signal(p->proc_cv, p->proc_lock);
 	  lock_release(p->proc_lock);
   }
