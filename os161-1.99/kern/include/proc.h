@@ -48,6 +48,7 @@ struct semaphore;
 
 #ifdef OPT_A2
 <<<<<<< HEAD
+<<<<<<< HEAD
 int volatile parent_pid_incre;
 //int volatile child_pid_incre;
 struct proc *parentTable[64];
@@ -55,6 +56,9 @@ struct proc *parentTable[64];
 struct lock *parent_table_lock;
 //struct lock *child_table_lock;
 
+=======
+extern int volatile pid_incre;
+>>>>>>> parent of 8dbdaff... updateA2_13
 =======
 extern int volatile pid_incre;
 >>>>>>> parent of 8dbdaff... updateA2_13
