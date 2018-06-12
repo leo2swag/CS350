@@ -97,12 +97,11 @@ void sys__exit(int exitcode) {
 
 #ifdef OPT_A2
   if (p->parent_pid != -1) { //curproc is not parent
-	  struct proc *parent;
 	  lock_acquire(parent_table_lock);
 	  //if (p->firstGenChild) {
 		//  parent = parentTable[p->parent_pid];
     //}
-    parent = parentTable[p->parent_pid];
+    struct proc *parent = parentTable[p->parent_pid];
     lock_release(parent_table_lock);
     /*
 	  lock_acquire(child_table_lock);

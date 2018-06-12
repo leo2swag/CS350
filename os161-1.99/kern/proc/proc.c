@@ -299,6 +299,7 @@ proc_create_runprogram(const char *name)
 #ifdef OPT_A2
 proc->parent_pid = -1;
 proc->pid = parent_pid_incre;
+parent_pid_incre++;
 proc->ifalive = true;
 proc->firstGenChild = false;
 proc->proc_lock = lock_create(name);
@@ -308,7 +309,6 @@ KASSERT(proc->proc_cv);
 
 lock_acquire(parent_table_lock);
 parentTable[proc->pid] = proc;
-parent_pid_incre++;
 lock_release(parent_table_lock);
 #endif
 
