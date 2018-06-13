@@ -113,10 +113,9 @@ void sys__exit(int exitcode) {
   p->exitcode = _MKWAIT_EXIT(exitcode);
   if (p->hasparent) {
     //struct proc *parent = allprocs[p->parent_pid];
-    lock_acquire(p->proc_lock);
     cv_signal(p->proc_cv, p->proc_lock);
-    lock_release(p->proc_lock);
   }
+  lock_release(p->proc_lock);
 
     /*
     for(unsigned int i = 0; i < childs->num; i++) {
@@ -249,7 +248,7 @@ sys_waitpid(pid_t pid,
     return EPERM;
   }
   lock_release(childprocs_lock);
-  
+
   lock_acquire(child->proc_lock);
   if (child->ifalive) {
 	  cv_wait(child->proc_cv, child->proc_lock);
