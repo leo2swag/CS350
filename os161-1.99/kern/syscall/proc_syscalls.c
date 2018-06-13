@@ -208,8 +208,8 @@ sys_waitpid(pid_t pid,
   }
   /* for now, just pretend the exitstatus is 0 */
 #ifdef OPT_A2
-  lock_acquire(childprocs_lock);
-  struct proc *child = childprocs[pid];
+  lock_acquire(allprocs_lock);
+  struct proc *child = allprocs[pid];
   //lock_release(childprocs_lock);
   if (child == NULL) {
 	  return ESRCH;
@@ -219,10 +219,10 @@ sys_waitpid(pid_t pid,
   }
 
   if (child->ifalive) {
-	  cv_wait(child->proc_cv, childprocs_lock);
+	  cv_wait(child->proc_cv, allprocs_lock);
   }
   exitstatus = child->exitcode;
-  lock_release(childprocs_lock);
+  lock_release(allprocs_lock);
 
 #else
   exitstatus = 0;
