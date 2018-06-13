@@ -262,6 +262,7 @@ sys_waitpid(pid_t pid,
   }
 
   exitstatus = child->exitcode;
+  kprintf("code%d", exitstatus);
   lock_release(child->proc_lock);
 
 #else
