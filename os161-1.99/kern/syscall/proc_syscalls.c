@@ -102,6 +102,13 @@ void sys__exit(int exitcode) {
 	   childprocs[p->pid] = NULL;
 	   lock_release(childprocs_lock);
 	   */
+  struct array *childs = p->childarry;
+  for(unsigned int i = 0; i < childs->num; i++) {
+      temp = array_get(childs, i);
+      if (temp->ifalive) {
+        temp->parent_pid = -1;
+      }
+  }
 
 	if (p->parent_pid != -1) { //curproc is not origin parent
 		struct proc *parent = allprocs[p->parent_pid];
@@ -110,7 +117,7 @@ void sys__exit(int exitcode) {
 			p->ifalive = false;
 			p->exitcode = _MKWAIT_EXIT(exitcode);
 		}
-	
+    
 		lock_release(parent->proc_lock);
 
 
