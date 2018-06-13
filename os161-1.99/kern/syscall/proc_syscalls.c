@@ -61,12 +61,16 @@ sys_fork(struct trapframe *parent_tf, pid_t *retval) {
   lock_release(childprocs_lock);
 
   //if curporc, assign to parent
+  /*
   lock_acquire(parentprocs_lock);
   if (curproc->parent_pid == -1) {
 	  parentprocs[curproc->pid] = curproc;
   }
-  lock_release(parentprocs_lock);
+  lock_release(parentprocs_lock);*/
+  lock_acquire(curproc->proc_lock);
   array_add(curproc->childarry, child, NULL);
+  curproc->haschild = true;
+  lock_release(curproc->proc_lock);
 
   //create thread
   struct trapframe *child_tf = kmalloc(sizeof(struct trapframe));
@@ -106,16 +110,26 @@ void sys__exit(int exitcode) {
   lock_acquire(p->proc_lock);
   p->ifalive = false;
   p->exitcode = _MKWAIT_EXIT(exitcode);
-  cv_broadcast(p->proc_cv, p->proc_lock);
+  cv_signal(p->proc_cv, p->proc_lock);
   lock_release(p->proc_lock);
-  
+/*
+  if (p->haschild) {
+    struct array *childs = p->childarry;
+    for(unsigned int i = 0; i < childs->num; i++) {
+      struct proc *childproc = array_get(childs, i);
+      if (childproc->ifalive) {
+        cv_wait(childproc->proc_cv, p->proc_lock);
+      }
+    }
+  }
+  lock_release(p->proc_lock);
   lock_acquire(allprocs_lock);
   struct proc *parent = allprocs[p->parent_pid];
   if (parent->ifalive) {
     cv_wait(parent->proc_cv, allprocs_lock);
   }
   lock_release(allprocs_lock);
-/*
+
   struct array *childs = p->childarry;
   for(unsigned int i = 0; i < childs->num; i++) {
       struct proc *temp = array_get(childs, i);
@@ -208,8 +222,8 @@ sys_waitpid(pid_t pid,
   }
   /* for now, just pretend the exitstatus is 0 */
 #ifdef OPT_A2
-  lock_acquire(allprocs_lock);
-  struct proc *child = allprocs[pid];
+  lock_acquire(childprocs_lock);
+  struct proc *child = childprocs[pid];
   //lock_release(childprocs_lock);
   if (child == NULL) {
 	  return ESRCH;
@@ -219,10 +233,10 @@ sys_waitpid(pid_t pid,
   }
 
   if (child->ifalive) {
-	  cv_wait(child->proc_cv, allprocs_lock);
+	  cv_wait(child->proc_cv, childprocs_lock);
   }
   exitstatus = child->exitcode;
-  lock_release(allprocs_lock);
+  lock_release(childprocs_lock);
 
 #else
   exitstatus = 0;
