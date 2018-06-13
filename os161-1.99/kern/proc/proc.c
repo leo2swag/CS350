@@ -162,9 +162,8 @@ proc_destroy(struct proc *proc)
 	}
 #endif // UW
 #ifdef OPT_A2
-	//allprocs[proc->pid] = NULL;
 	//lock_destroy(proc->proc_lock);
-	cv_destroy(proc->proc_cv);
+	cv_destroy(proc->proc_cv); 
 #endif
 
 	threadarray_cleanup(&proc->p_threads);
@@ -217,10 +216,7 @@ proc_bootstrap(void)
   pid_incre = 2;
   allprocs_lock = lock_create("allprocs_lock");
   KASSERT(allprocs_lock);
-  //parentprocs_lock = lock_create("parentprocs_lock");
-  //KASSERT(parentprocs_lock);
-  //childprocs_lock = lock_create("childprocs_lock");
-  //KASSERT(childprocs_lock);
+
 #endif
 }
 
@@ -300,9 +296,6 @@ KASSERT(proc->proc_cv);
 proc_info_table[proc->pid].parent_pid = -1;
 proc_info_table[proc->pid].is_alive = true;
 proc_info_table[proc->pid].proc = proc;
-
-//proc->proc_lock = lock_create(name);
-//KASSERT(proc->proc_lock);
 
 lock_release(allprocs_lock);
 //proc->hasparent = false;

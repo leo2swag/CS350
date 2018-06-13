@@ -55,19 +55,6 @@ sys_fork(struct trapframe *parent_tf, pid_t *retval) {
   proc_info_table[child->pid].parent_pid = curproc->pid;
   lock_release(allprocs_lock);
 
-  //assign to children
-  //lock_acquire(childprocs_lock);
-  //childprocs[child->pid] = child;
-  //lock_release(childprocs_lock);
-
-  //if curporc, assign to parent
-  /*
-  lock_acquire(parentprocs_lock);
-  if (curproc->parent_pid == -1) {
-	  parentprocs[curproc->pid] = curproc;
-  }
-  lock_release(parentprocs_lock);*/
-
   //create thread
   struct trapframe *child_tf = kmalloc(sizeof(struct trapframe));
   memcpy(child_tf, parent_tf, sizeof(struct trapframe));
@@ -92,21 +79,10 @@ void sys__exit(int exitcode) {
 	   an unused variable */
 #ifdef OPT_A2
 
-
-	   /*
-	   lock_acquire(childprocs_lock);
-	   struct proc *pp = childprocs[p->parent_pid];
-	   if (pp != NULL) {
-		   pp->childexit[p->pid] = _MKWAIT_EXIT(exitcode);
-	   }
-	   childprocs[p->pid] = NULL;
-	   lock_release(childprocs_lock);
-	   */
-    
   lock_acquire(allprocs_lock);
   proc_info_table[p->pid].is_alive = false;
   proc_info_table[p->pid].exitcode = _MKWAIT_EXIT(exitcode);
-  cv_signal(p->proc_cv, allprocs_lock);
+  cv_signal(p->proc_cv, allprocs_lock); //weak it self
   lock_release(allprocs_lock);
   
 /*
@@ -119,18 +95,6 @@ void sys__exit(int exitcode) {
 */
 
     /*
-    for(unsigned int i = 0; i < childs->num; i++) {
-      struct proc *childproc = array_get(childs, i);
-      lock_acquire(childproc->exitlock);
-      if (childproc->ifalive) {
-        cv_signal(childproc->proc_cv, childproc->exitlock);
-      }
-      lock_release(childproc->exitlock);
-    }
-  }
-
-  lock_release(p->proc_lock);
-
   if (p->haschild) {
     struct array *childs = p->childarry;
     for(unsigned int i = 0; i < childs->num; i++) {
@@ -140,35 +104,7 @@ void sys__exit(int exitcode) {
       }
     }
   }
-  lock_release(p->proc_lock);
-  lock_acquire(allprocs_lock);
-  struct proc *parent = allprocs[p->parent_pid];
-  if (parent->ifalive) {
-    cv_wait(parent->proc_cv, allprocs_lock);
-  }
-  lock_release(allprocs_lock);
 
-  struct array *childs = p->childarry;
-  for(unsigned int i = 0; i < childs->num; i++) {
-      struct proc *temp = array_get(childs, i);
-      if (temp->ifalive) {
-        temp->parent_pid = -1;
-      } else {
-        proc_destroy(temp);
-      }
-  }
-
-	if (p->parent_pid != -1) { //curproc is not origin parent
-    //struct proc *parent = allprocs[p->parent_pid];
-		//if (parent->ifalive) {
-			p->ifalive = false;
-			p->exitcode = _MKWAIT_EXIT(exitcode);
-    //}
-
-    lock_acquire(p->proc_lock);
-		cv_signal(p->proc_cv, p->proc_lock);
-		lock_release(p->proc_lock);
-	}
 	*/
 
 #else
@@ -250,9 +186,9 @@ sys_waitpid(pid_t pid,
     lock_release(allprocs_lock);
     return EPERM;
   }
-  
+
   if (proc_info_table[pid].is_alive) {
-	  cv_wait(child->proc_cv, allprocs_lock);
+	  cv_wait(child->proc_cv, allprocs_lock); //let parent wait until child dead
   }
 
   exitstatus = proc_info_table[pid].exitcode;
