@@ -57,9 +57,9 @@ sys_fork(struct trapframe *parent_tf, pid_t *retval) {
   lock_release(child->proc_lock);
 
   //assign to children
-  lock_acquire(childprocs_lock);
-  childprocs[child->pid] = child;
-  lock_release(childprocs_lock);
+  //lock_acquire(childprocs_lock);
+  //childprocs[child->pid] = child;
+  //lock_release(childprocs_lock);
 
   //if curporc, assign to parent
   /*
@@ -244,23 +244,25 @@ sys_waitpid(pid_t pid,
   }
   /* for now, just pretend the exitstatus is 0 */
 #ifdef OPT_A2
-  lock_acquire(childprocs_lock);
-  struct proc *child = childprocs[pid];
+  lock_acquire(allprocs_lock);
+  struct proc *child = allprocs[pid];
   if (child == NULL) {
+    lock_release(allprocs_lock);
 	  return ESRCH;
   }
   if (child->parent_pid != curproc->pid) {
+    lock_release(allprocs_lock);
     return EPERM;
   }
-  lock_release(childprocs_lock);
+  lock_release(allprocs_lock);
 
   lock_acquire(child->proc_lock);
   if (child->ifalive) {
 	  cv_wait(child->proc_cv, child->proc_lock);
   }
-  lock_release(child->proc_lock);
-  exitstatus = child->exitcode;
 
+  exitstatus = child->exitcode;
+  lock_release(child->proc_lock);
 
 #else
   exitstatus = 0;

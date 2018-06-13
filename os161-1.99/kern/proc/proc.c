@@ -285,12 +285,12 @@ proc_create_runprogram(const char *name)
 	V(proc_count_mutex);
 #endif // UW
 #ifdef OPT_A2
+
 proc->parent_pid = -1;
-
-
+lock_acquire(allprocs_lock);
 proc->pid = pid_incre;
 pid_incre++;
-
+allprocs[proc->pid] = proc;
 
 proc->proc_lock = lock_create(name);
 KASSERT(proc->proc_lock);
@@ -301,10 +301,7 @@ proc->hasparent = false;
 proc->ifalive = true;
 proc->childarry = array_create();
 array_init(proc->childarry);
-
-
-allprocs[proc->pid] = proc;
-
+lock_release(allprocs_lock);
 
 #endif
 
