@@ -75,9 +75,8 @@ struct proc {
 	pid_t parent_pid;
 	bool ifalive;
 	int exitcode;
-	bool haschild;
+	bool hasparent;
 	int childexit[64];
-	struct lock *exitlock;
 	struct lock *proc_lock;
 	struct cv *proc_cv;
 	struct array* childarry;

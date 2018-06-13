@@ -53,6 +53,7 @@ sys_fork(struct trapframe *parent_tf, pid_t *retval) {
   child->p_addrspace = child_addre;
   //assign pid
   child->parent_pid = curproc->pid;
+  child->hasparent = true;
   lock_release(child->proc_lock);
 
   //assign to children
@@ -69,7 +70,7 @@ sys_fork(struct trapframe *parent_tf, pid_t *retval) {
   lock_release(parentprocs_lock);*/
   lock_acquire(curproc->proc_lock);
   array_add(curproc->childarry, child, NULL);
-  curproc->haschild = true;
+  //curproc->haschild = true;
   lock_release(curproc->proc_lock);
 
   //create thread
@@ -110,8 +111,14 @@ void sys__exit(int exitcode) {
   lock_acquire(p->proc_lock);
   p->ifalive = false;
   p->exitcode = _MKWAIT_EXIT(exitcode);
-  if (p->haschild) {
-    struct array *childs = p->childarry;
+  if (p->hasparent) {
+    //struct proc *parent = allprocs[p->parent_pid];
+    lock_acquire(p->proc_lock);
+    cv_signal(p->proc_cv, p->proc_lock);
+    lock_release(p->proc_lock);
+  }
+
+    /*
     for(unsigned int i = 0; i < childs->num; i++) {
       struct proc *childproc = array_get(childs, i);
       lock_acquire(childproc->exitlock);
@@ -123,7 +130,7 @@ void sys__exit(int exitcode) {
   }
 
   lock_release(p->proc_lock);
-/*
+
   if (p->haschild) {
     struct array *childs = p->childarry;
     for(unsigned int i = 0; i < childs->num; i++) {
@@ -235,21 +242,21 @@ sys_waitpid(pid_t pid,
 #ifdef OPT_A2
   lock_acquire(childprocs_lock);
   struct proc *child = childprocs[pid];
-  //lock_release(childprocs_lock);
   if (child == NULL) {
 	  return ESRCH;
   }
   if (child->parent_pid != curproc->pid) {
     return EPERM;
   }
-
-  lock_acquire(child->exitlock);
-  if (child->ifalive) {
-	  cv_wait(child->proc_cv, child->exitlock);
-  }
-  lock_release(child->exitlock);
-  exitstatus = child->exitcode;
   lock_release(childprocs_lock);
+  
+  lock_acquire(child->proc_lock);
+  if (child->ifalive) {
+	  cv_wait(child->proc_cv, child->proc_lock);
+  }
+  lock_release(child->proc_lock);
+  exitstatus = child->exitcode;
+
 
 #else
   exitstatus = 0;
