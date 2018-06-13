@@ -41,7 +41,6 @@
  * Unless you're implementing multithreaded user processes, the only
  * process that will have more than one thread is the kernel process.
  */
-
 #include <types.h>
 #include <proc.h>
 #include <current.h>
@@ -50,7 +49,6 @@
 #include <vfs.h>
 #include <synch.h>
 #include <kern/fcntl.h>  
-#include "opt-A2.h"
 
 /*
  * The process for the kernel; this holds all the kernel-only threads.
@@ -71,6 +69,11 @@ struct semaphore *no_proc_sem;
 #endif  // UW
 
 
+#ifdef OPT_A2
+	volatile int pid_counter;
+	struct proc* proc_table[MAX_PROC];
+	struct lock* proc_table_lock;
+#endif
 
 /*
  * Create a proc structure.
@@ -163,10 +166,14 @@ proc_destroy(struct proc *proc)
 	  vfs_close(proc->console);
 	}
 #endif // UW
+
 #ifdef OPT_A2
-	allprocs[proc->pid] = NULL;
+
+	proc_table[proc->pid] = NULL;
+
 	lock_destroy(proc->proc_lock);
 	cv_destroy(proc->proc_cv);
+
 #endif
 
 	threadarray_cleanup(&proc->p_threads);
@@ -190,7 +197,6 @@ proc_destroy(struct proc *proc)
 	V(proc_count_mutex);
 #endif // UW
 	
-
 }
 
 /*
@@ -216,14 +222,10 @@ proc_bootstrap(void)
 #endif // UW 
 
 #ifdef OPT_A2
-  pid_incre = 2;
-  allprocs_lock = lock_create("allprocs_lock");
-  KASSERT(allprocs_lock);
-  parentprocs_lock = lock_create("parentprocs_lock");
-  KASSERT(parentprocs_lock);
-  childprocs_lock = lock_create("childprocs_lock");
-  KASSERT(childprocs_lock);
-#endif
+  pid_counter = 2;
+  proc_table_lock = lock_create("proc_table_lock");
+  KASSERT(proc_table_lock);
+#endif  
 }
 
 /*
@@ -286,30 +288,29 @@ proc_create_runprogram(const char *name)
 	proc_count++;
 	V(proc_count_mutex);
 #endif // UW
+
 #ifdef OPT_A2
-proc->parent_pid = -1;
-proc->proc_lock = lock_create(name);
-KASSERT(proc->proc_lock);
-proc->proc_cv = cv_create(name);
-KASSERT(proc->proc_cv);
+	proc->parent_pid = -1;
 
-lock_acquire(allprocs_lock);
-if (pid_incre >= 66) {
-	lock_release(allprocs_lock);
-	kfree(proc);
-	return NULL;
-}
-lock_release(allprocs_lock);
+	lock_acquire(proc_table_lock);
+	if (pid_counter >= MAX_PROC) {		// Max Proc Check
+		lock_release(proc_table_lock);
+		kfree(proc);
+		return NULL;	
+	}
+	proc->pid = pid_counter++;
+	lock_release(proc_table_lock);
 
-lock_acquire(proc->proc_lock);
-proc->pid = pid_incre;
-pid_incre++;
-proc->ifalive = true;
-lock_release(proc->proc_lock);
+	proc->proc_lock = lock_create(name);
+	proc->proc_cv = cv_create(name);
 
-lock_acquire(allprocs_lock);
-allprocs[proc->pid] = proc;
-lock_release(allprocs_lock);
+	KASSERT(proc->proc_lock);
+	KASSERT(proc->proc_cv);
+
+	// add to proc table
+	lock_acquire(proc_table_lock);
+	proc_table[proc->pid] = proc; 
+	lock_release(proc_table_lock);
 #endif
 
 	return proc;
@@ -405,3 +406,21 @@ curproc_setas(struct addrspace *newas)
 	spinlock_release(&proc->p_lock);
 	return oldas;
 }
+
+#ifdef OPT_A2
+void 
+setParentChildRelationship(struct proc* parent, struct  proc* child)
+{
+	KASSERT(parent);
+	KASSERT(child);
+
+//	lock_acquire(child->proc_lock);
+	child->parent_pid = parent->pid;
+//	lock_release(child->proc_lock);
+
+//	lock_acquire(parent->proc_lock);
+//	parent->children_pid[child->pid] = child->pid;
+//	lock_release(parent->proc_lock);
+}
+#endif
+

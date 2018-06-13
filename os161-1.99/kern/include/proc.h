@@ -47,15 +47,12 @@ struct semaphore;
 #endif // UW
 
 #ifdef OPT_A2
-int volatile pid_incre;
-//struct proc *allprocs[66];
-struct proc *childprocs[66];
-//struct proc *parentprocs[66];
-//struct lock *allprocs_lock;
-struct lock *childprocs_lock;
-//struct lock *parentprocs_lock;
-
+	#define MAX_PROC 66
+	extern volatile int pid_counter;
+	extern struct proc* proc_table[MAX_PROC];
+	extern struct lock* proc_table_lock;
 #endif
+
 /*
  * Process structure.
  */
@@ -70,15 +67,6 @@ struct proc {
 	/* VFS */
 	struct vnode *p_cwd;		/* current working directory */
 
-#ifdef OPT_A2
-	pid_t pid;
-	pid_t parent_pid;
-	bool ifalive;
-	int exitcode;
-	int childexit[66];
-	struct lock *proc_lock;
-	struct cv *proc_cv;
-#endif
 #ifdef UW
   /* a vnode to refer to the console device */
   /* this is a quick-and-dirty way to get console writes working */
@@ -86,6 +74,16 @@ struct proc {
      system calls, since each process will need to keep track of all files
      it has opened, not just the console. */
   struct vnode *console;                /* a vnode for the console device */
+#endif
+
+#ifdef OPT_A2
+  pid_t pid;
+
+  int parent_pid;
+  int children_exit_code[MAX_PROC];
+
+  struct lock* proc_lock;
+  struct cv* proc_cv;
 #endif
 
 	/* add more material here as needed */
@@ -119,6 +117,15 @@ struct addrspace *curproc_getas(void);
 
 /* Change the address space of the current process, and return the old one. */
 struct addrspace *curproc_setas(struct addrspace *);
+
+
+#ifdef OPT_A2
+
+	void setParentChildRelationship(struct proc* parent, struct proc* child);
+
+	void getProcess(pid_t pid);
+
+#endif
 
 
 #endif /* _PROC_H_ */
