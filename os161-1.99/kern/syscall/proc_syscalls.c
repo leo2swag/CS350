@@ -114,7 +114,7 @@ void sys__exit(int exitcode) {
   if (parent->ifalive) {
     cv_wait(parent->proc_cv, allprocs_lock);
   }
-  lock_release(allprocs_lock)
+  lock_release(allprocs_lock);
 /*
   struct array *childs = p->childarry;
   for(unsigned int i = 0; i < childs->num; i++) {
