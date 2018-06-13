@@ -250,8 +250,8 @@ sys_waitpid(pid_t pid,
     lock_release(allprocs_lock);
     return EPERM;
   }
-
-  if (child->ifalive) {
+  
+  if (proc_info_table[pid].is_alive) {
 	  cv_wait(child->proc_cv, allprocs_lock);
   }
 
