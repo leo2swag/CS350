@@ -293,14 +293,13 @@ proc_create_runprogram(const char *name)
 lock_acquire(allprocs_lock);
 proc->pid = pid_incre;
 pid_incre++;
-allprocs[proc->pid] = proc;
 
 proc->proc_cv = cv_create(name);
 KASSERT(proc->proc_cv);
 
-proc_info_table[pid].parent_pid = -1;
-proc_info_table[pid].is_alive = true;
-proc_info_table[pid].proc = proc;
+proc_info_table[proc->pid].parent_pid = -1;
+proc_info_table[proc->pid].is_alive = true;
+proc_info_table[proc->pid].proc = proc;
 
 //proc->proc_lock = lock_create(name);
 //KASSERT(proc->proc_lock);
