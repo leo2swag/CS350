@@ -103,6 +103,19 @@ void sys__exit(int exitcode) {
 	   lock_release(childprocs_lock);
 	   */
     
+  lock_acquire(p->proc_lock);
+  p->ifalive = false;
+  p->exitcode = _MKWAIT_EXIT(exitcode);
+  cv_broadcast(p->proc_cv, p->proc_lock);
+  lock_release(p->proc_lock);
+  
+  lock_acquire(allprocs_lock);
+  struct proc *parent = allprocs[p->parent_pid];
+  if (parent->ifalive) {
+    cv_wait(parent->proc_cv, allprocs_lock);
+  }
+  lock_release(allprocs_lock)
+/*
   struct array *childs = p->childarry;
   for(unsigned int i = 0; i < childs->num; i++) {
       struct proc *temp = array_get(childs, i);
@@ -124,7 +137,7 @@ void sys__exit(int exitcode) {
 		cv_signal(p->proc_cv, p->proc_lock);
 		lock_release(p->proc_lock);
 	}
-	
+	*/
 
 #else
   (void)exitcode;
