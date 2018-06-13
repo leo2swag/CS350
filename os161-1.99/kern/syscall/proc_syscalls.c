@@ -9,84 +9,15 @@
 #include <thread.h>
 #include <addrspace.h>
 #include <copyinout.h>
-#include "opt-A2.h"
+#include <synch.h>
 #include <mips/trapframe.h>
 #include <vfs.h>
 #include <kern/fcntl.h>
-#include <test.h>
 #include <sfs.h>
-#include <synch.h>
-
+#include <test.h>
 
   /* this implementation of sys__exit does not do anything with the exit code */
   /* this needs to be fixed to get exit() and waitpid() working properly */
-
-#ifdef OPT_A2
-
-void forked_process(void *tf, unsigned long data) {
-  struct trapframe tflocal = *((struct trapframe *) tf);
-  tflocal.tf_a3 = 0;
-  tflocal.tf_v0 = 0;
-  tflocal.tf_epc += 4;
-  mips_usermode(&tflocal);
-  kfree(tf);
-  (void) data;
-}
-
-int 
-sys_fork(struct trapframe *parent_tf, pid_t *retval) {
-  //create process
-  struct proc *child = proc_create_runprogram(curproc->p_name);
-  if (child == NULL) {
-    return ENOMEM; //out of memory code 
-  }
-
-  //create address space
-  struct addrspace *child_addre;
-  int copy_det = as_copy(curproc->p_addrspace, &child_addre);
-  if (copy_det) {
-    proc_destroy(child);
-    return copy_det;
-  }
-
-  lock_acquire(child->proc_lock);
-  child->p_addrspace = child_addre;
-  
-  //assign pid
-  child->parent_pid = curproc->pid;
-  lock_release(child->proc_lock);
-
-  //assign to children
-  lock_acquire(childprocs_lock);
-  if (curproc->parent_pid != -1) {
-	  childprocs[child->pid] = child;
-  }
-  lock_release(childprocs_lock);
-
-  //if curporc, assign to parent
-  lock_acquire(parentprocs_lock);
-  if (curproc->parent_pid == -1) {
-	  parentprocs[curproc->pid] = curproc;
-  }
-  lock_release(parentprocs_lock);
-
-  //create thread
-  struct trapframe *child_tf = kmalloc(sizeof(struct trapframe));
-  memcpy(child_tf, parent_tf, sizeof(struct trapframe));
-  thread_fork(child->p_name, child, forked_process, child_tf, 0);
-  /*
-  if (thread_det) {
-    kfree(child_addre);
-    proc_destroy(child);
-    return thread_det;
-  }
-  */
-
-  *retval = child->pid;
-  return 0;
-}
-
-#endif
 
 void sys__exit(int exitcode) {
 
@@ -94,36 +25,25 @@ void sys__exit(int exitcode) {
   struct proc *p = curproc;
   /* for now, just include this to keep the compiler from complaining about
      an unused variable */
-#ifdef OPT_A2
-  if (p->parent_pid != -1) {
-	 
-	  lock_acquire(childprocs_lock);
-	  struct proc *pp = childprocs[p->parent_pid];
-	  if (pp != NULL) {
-		  pp->childexit[p->pid] = _MKWAIT_EXIT(exitcode);
-	  }
-	  childprocs[p->pid] = NULL;
-	  lock_release(childprocs_lock);
 
-	  /*
-	  lock_acquire(p->proc_lock);
-	  p->ifalive = false;
-	  p->exitcode = _MKWAIT_EXIT(exitcode);
-	  lock_release(p->proc_lock);
+  #if OPT_A2
+    if (p->parent_pid != -1) {
+      lock_acquire(proc_table_lock);
+      struct proc* parent = proc_table[p->parent_pid];
+      if (parent != NULL) {
+        parent->children_exit_code[p->pid] = _MKWAIT_EXIT(exitcode);    // Add exit code
+      }
+      proc_table[p->pid] = NULL;
+      lock_release(proc_table_lock);
 
-	  lock_acquire(childprocs_lock);
-	  childprocs[p->pid] = NULL;
-	  lock_release(childprocs_lock);
-	  */
+      lock_acquire(p->proc_lock);
+      cv_signal(p->proc_cv, p->proc_lock);
+      lock_release(p->proc_lock);
+    }
+  #else
+    (void)exitcode;
+  #endif
 
-	  lock_acquire(p->proc_lock);
-	  cv_signal(p->proc_cv, p->proc_lock);
-	  lock_release(p->proc_lock);
-  }
-
-#else
-  (void)exitcode;
-#endif
   DEBUG(DB_SYSCALL,"Syscall: _exit(%d)\n",exitcode);
 
   KASSERT(curproc->p_addrspace != NULL);
@@ -158,9 +78,9 @@ sys_getpid(pid_t *retval)
 {
   /* for now, this is just a stub that always returns a PID of 1 */
   /* you need to fix this to make it work properly */
-  #ifdef OPT_A2
+  #if OPT_A2
     *retval = curproc->pid;
-  #else
+  #else 
     *retval = 1;
   #endif
   return(0);
@@ -182,40 +102,29 @@ sys_waitpid(pid_t pid,
      the specified process.   
      In fact, this will return 0 even if the specified process
      is still running, and even if it never existed in the first place.
+
      Fix this!
   */
 
   if (options != 0) {
     return(EINVAL);
   }
-  /* for now, just pretend the exitstatus is 0 */
-#ifdef OPT_A2
-  lock_acquire(childprocs_lock);
-  struct proc *child = childprocs[pid];
-  if (child == NULL) {
-	  return ESRCH;
-  }
-  else {
-	  cv_wait(child->proc_cv, childprocs_lock);
-  }
-  lock_release(childprocs_lock);
 
-  lock_acquire(curproc->proc_lock);
-  /*
-  if (child->parent_pid != curproc->pid) {
-	  return EPERM;
-  }
-  if (child->ifalive) {
-	  cv_wait(child->proc_cv, child->proc_lock);
-  }*/
-  //exitstatus = child->exitcode;
-  exitstatus = curproc->childexit[pid];
-  lock_release(curproc->proc_lock);
+  #if OPT_A2
+    lock_acquire(proc_table_lock);
+    struct proc* child_proc = proc_table[pid];
+    if (child_proc != NULL) {     // 查看小孩是否死亡
+      cv_wait(child_proc->proc_cv, proc_table_lock);
+    }
+    lock_release(proc_table_lock);
 
+    lock_acquire(curproc->proc_lock);
+    exitstatus = curproc->children_exit_code[pid];
+    lock_release(curproc->proc_lock);
+  #else
+    exitstatus = 0;
+  #endif
 
-#else
-  exitstatus = 0;
-#endif
   result = copyout((void *)&exitstatus,status,sizeof(int));
   if (result) {
     return(result);
@@ -223,3 +132,100 @@ sys_waitpid(pid_t pid,
   *retval = pid;
   return(0);
 }
+
+#ifdef OPT_A2
+
+void entryptfn(void* a, unsigned long b) {
+  (void)b;
+  struct trapframe tf = *((struct trapframe *) a);
+  kfree(a);
+  tf.tf_v0 = 0;
+  tf.tf_a3 = 0;
+  tf.tf_epc += 4;
+  mips_usermode(&tf);
+}
+
+
+int sys_fork(struct trapframe *parent_tf, pid_t* retval) {
+  struct proc *p = curproc;
+  struct proc *child_proc;
+  struct addrspace *child_addrs;
+
+  // Create children process
+  child_proc = proc_create_runprogram(p->p_name);
+
+  if (child_proc == NULL) { // ERROR
+    return ENOMEM;
+  }
+
+  // Create and copy address space
+  int as_copy_result = as_copy(curproc->p_addrspace, &child_addrs);
+
+  if (as_copy_result != 0) {  // error handling
+    proc_destroy(child_proc);
+    return as_copy_result;
+  }
+
+  lock_acquire(child_proc->proc_lock);
+  child_proc->p_addrspace = child_addrs;
+  setParentChildRelationship(p, child_proc);
+  lock_release(child_proc->proc_lock);
+
+
+  // Make a copy of trapframe
+  struct trapframe* cpy_tf = kmalloc(sizeof(struct trapframe));
+  memcpy(cpy_tf, parent_tf, sizeof(struct trapframe));
+
+  thread_fork(child_proc->p_name, child_proc, entryptfn, cpy_tf, 0);
+
+  *retval = child_proc->pid;
+
+  return 0;
+}
+
+int sys_execv(userptr_t* program, userptr_t* args) {
+
+  int result;
+  int argc = 0;
+  char* program_path;
+  char* kernel_program_path;
+  char** kernel_args;
+  char** program_args;
+
+  program_path = (char*) program;
+  program_args = (char**) args;
+  
+   /* copy program path into kernel */
+   kernel_program_path = kmalloc(sizeof(char *) * (strlen(program_path) + 1));
+   result = copyinstr((const_userptr_t) program_path, kernel_program_path, strlen(program_path) + 1, NULL);
+   if (result) {
+     return result;
+   }
+
+  /* Count # of arg */
+  while (program_args[argc] != NULL) {
+    ++argc;
+  }
+
+  KASSERT(program_args[argc] == NULL);
+
+  /* Copy arg into kernel */
+  kernel_args = kmalloc(sizeof(char *) * (argc + 1));
+
+  for (int i = 0; i < argc; ++i) {
+    int len = strlen(program_args[i]) + 1;
+    kernel_args[i] = kmalloc(sizeof(char) * len);
+    result = copyinstr((const_userptr_t)program_args[i], (void*)kernel_args[i], len, NULL);
+    if (result) {
+      return result;
+    }
+  }
+
+  runprogram(program_path, kernel_args, argc);
+
+  return EINVAL;
+}
+
+#endif
+
+
