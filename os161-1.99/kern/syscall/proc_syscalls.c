@@ -102,23 +102,23 @@ void sys__exit(int exitcode) {
 	   childprocs[p->pid] = NULL;
 	   lock_release(childprocs_lock);
 	   */
+    /*
   struct array *childs = p->childarry;
   for(unsigned int i = 0; i < childs->num; i++) {
       struct proc *temp = array_get(childs, i);
       if (temp->ifalive) {
         temp->parent_pid = -1;
       }
-  }
+  }*/
 
 	if (p->parent_pid != -1) { //curproc is not origin parent
-		struct proc *parent = allprocs[p->parent_pid];
-		lock_acquire(parent->proc_lock);
+    lock_acquire(p->proc_lock);
+    struct proc *parent = allprocs[p->parent_pid];
 		if (parent->ifalive) {
 			p->ifalive = false;
 			p->exitcode = _MKWAIT_EXIT(exitcode);
 		}
-    
-		lock_release(parent->proc_lock);
+		lock_release(p->proc_lock);
 
 
 		lock_acquire(p->proc_lock);
