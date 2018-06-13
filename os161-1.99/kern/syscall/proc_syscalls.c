@@ -110,7 +110,18 @@ void sys__exit(int exitcode) {
   lock_acquire(p->proc_lock);
   p->ifalive = false;
   p->exitcode = _MKWAIT_EXIT(exitcode);
-  cv_signal(p->proc_cv, p->proc_lock);
+  if (p->haschild) {
+    struct array *childs = p->childarry;
+    for(unsigned int i = 0; i < childs->num; i++) {
+      lock_acquire(childprocs_lock);
+      struct proc *childproc = array_get(childs, i);
+      if (childproc->ifalive) {
+        cv_signal(childproc->proc_cv, childprocs_lock);
+      }
+    }
+    lock_release(childprocs_lock);
+  }
+
   lock_release(p->proc_lock);
 /*
   if (p->haschild) {
