@@ -111,15 +111,16 @@ void sys__exit(int exitcode) {
   lock_acquire(p->proc_lock);
   p->ifalive = false;
   p->exitcode = _MKWAIT_EXIT(exitcode);
+  cv_signal(p->proc_cv, p->proc_lock);
   lock_release(p->proc_lock);
-
+/*
   if (p->hasparent) {
     struct proc *parent = allprocs[p->parent_pid];
     lock_acquire(parent->proc_lock);
     cv_signal(parent->proc_cv, parent->proc_lock);
     lock_release(parent->proc_lock);
   }
-
+*/
 
     /*
     for(unsigned int i = 0; i < childs->num; i++) {
@@ -253,11 +254,11 @@ sys_waitpid(pid_t pid,
   }
   lock_release(childprocs_lock);
 
-  lock_acquire(curproc->proc_lock);
+  lock_acquire(child->proc_lock);
   if (child->ifalive) {
-	  cv_wait(curproc->proc_cv, curproc->proc_lock);
+	  cv_wait(child->proc_cv, child->proc_lock);
   }
-  lock_release(curproc->proc_lock);
+  lock_release(child->proc_lock);
   exitstatus = child->exitcode;
 
 
