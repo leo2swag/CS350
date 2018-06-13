@@ -183,48 +183,6 @@ int sys_fork(struct trapframe *parent_tf, pid_t* retval) {
   return 0;
 }
 
-int sys_execv(userptr_t* program, userptr_t* args) {
-
-  int result;
-  int argc = 0;
-  char* program_path;
-  char* kernel_program_path;
-  char** kernel_args;
-  char** program_args;
-
-  program_path = (char*) program;
-  program_args = (char**) args;
-  
-   /* copy program path into kernel */
-   kernel_program_path = kmalloc(sizeof(char *) * (strlen(program_path) + 1));
-   result = copyinstr((const_userptr_t) program_path, kernel_program_path, strlen(program_path) + 1, NULL);
-   if (result) {
-     return result;
-   }
-
-  /* Count # of arg */
-  while (program_args[argc] != NULL) {
-    ++argc;
-  }
-
-  KASSERT(program_args[argc] == NULL);
-
-  /* Copy arg into kernel */
-  kernel_args = kmalloc(sizeof(char *) * (argc + 1));
-
-  for (int i = 0; i < argc; ++i) {
-    int len = strlen(program_args[i]) + 1;
-    kernel_args[i] = kmalloc(sizeof(char) * len);
-    result = copyinstr((const_userptr_t)program_args[i], (void*)kernel_args[i], len, NULL);
-    if (result) {
-      return result;
-    }
-  }
-
-  runprogram(program_path, kernel_args, argc);
-
-  return EINVAL;
-}
 
 #endif
 
