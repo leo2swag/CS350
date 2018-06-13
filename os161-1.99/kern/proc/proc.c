@@ -164,6 +164,7 @@ proc_destroy(struct proc *proc)
 #ifdef OPT_A2
 	allprocs[proc->pid] = NULL;
 	lock_destroy(proc->proc_lock);
+	lock_destroy(proc->exitlock);
 	cv_destroy(proc->proc_cv);
 #endif
 
@@ -294,6 +295,8 @@ lock_release(childprocs_lock);
 
 proc->proc_lock = lock_create(name);
 KASSERT(proc->proc_lock);
+proc->exitlock = lock_create(name);
+KASSERT(proc->exitlock);
 proc->proc_cv = cv_create(name);
 KASSERT(proc->proc_cv);
 

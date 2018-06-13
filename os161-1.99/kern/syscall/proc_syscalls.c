@@ -113,13 +113,13 @@ void sys__exit(int exitcode) {
   if (p->haschild) {
     struct array *childs = p->childarry;
     for(unsigned int i = 0; i < childs->num; i++) {
-      lock_acquire(childprocs_lock);
       struct proc *childproc = array_get(childs, i);
+      lock_acquire(childproc->exitlock);
       if (childproc->ifalive) {
-        cv_signal(childproc->proc_cv, childprocs_lock);
+        cv_signal(childproc->proc_cv, exitlock);
       }
+      lock_release(childproc->exitlock);
     }
-    lock_release(childprocs_lock);
   }
 
   lock_release(p->proc_lock);
@@ -243,9 +243,11 @@ sys_waitpid(pid_t pid,
     return EPERM;
   }
 
+  lock_acquire(child->exitlock);
   if (child->ifalive) {
-	  cv_wait(child->proc_cv, childprocs_lock);
+	  cv_wait(child->proc_cv, child->exitlock);
   }
+  lock_release(child->exitlock);
   exitstatus = child->exitcode;
   lock_release(childprocs_lock);
 

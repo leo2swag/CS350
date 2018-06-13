@@ -77,6 +77,7 @@ struct proc {
 	int exitcode;
 	bool haschild;
 	int childexit[64];
+	struct lock *exitlock;
 	struct lock *proc_lock;
 	struct cv *proc_cv;
 	struct array* childarry;
