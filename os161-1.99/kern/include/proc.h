@@ -47,13 +47,20 @@ struct semaphore;
 #endif // UW
 
 #ifdef OPT_A2
+struct proc_info {
+	pid_t parent_pid;
+	bool is_alive;
+	int exitcode;
+	struct proc *proc;
+};
+
 int volatile pid_incre;
-struct proc *allprocs[64];
-struct proc *childprocs[64];
-struct proc *parentprocs[66];
+//struct proc *allprocs[64];
+//struct proc *childprocs[64];
+struct proc_info proc_info_table[66];
 struct lock *allprocs_lock;
-struct lock *childprocs_lock;
-struct lock *parentprocs_lock;
+//struct lock *childprocs_lock;
+//struct lock *parentprocs_lock;
 
 #endif
 /*
@@ -72,14 +79,14 @@ struct proc {
 
 #ifdef OPT_A2
 	pid_t pid;
-	pid_t parent_pid;
-	bool ifalive;
-	int exitcode;
-	bool hasparent;
-	int childexit[64];
-	struct lock *proc_lock;
+	//pid_t parent_pid;
+
+	//int exitcode;
+	//bool hasparent;
+	//int childexit[64];
+	//struct lock *proc_lock;
 	struct cv *proc_cv;
-	struct array* childarry;
+	//struct array* childarry;
 #endif
 #ifdef UW
   /* a vnode to refer to the console device */

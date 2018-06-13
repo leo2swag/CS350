@@ -49,12 +49,11 @@ sys_fork(struct trapframe *parent_tf, pid_t *retval) {
     return copy_det;
   }
 
-  lock_acquire(child->proc_lock);
+  lock_acquire(allprocs_lock);
   child->p_addrspace = child_addre;
   //assign pid
-  child->parent_pid = curproc->pid;
-  child->hasparent = true;
-  lock_release(child->proc_lock);
+  proc_info_table[child->pid].parent_pid = curproc->pid;
+  lock_release(allprocs_lock);
 
   //assign to children
   //lock_acquire(childprocs_lock);
@@ -68,10 +67,6 @@ sys_fork(struct trapframe *parent_tf, pid_t *retval) {
 	  parentprocs[curproc->pid] = curproc;
   }
   lock_release(parentprocs_lock);*/
-  lock_acquire(curproc->proc_lock);
-  array_add(curproc->childarry, child, NULL);
-  //curproc->haschild = true;
-  lock_release(curproc->proc_lock);
 
   //create thread
   struct trapframe *child_tf = kmalloc(sizeof(struct trapframe));
@@ -108,11 +103,12 @@ void sys__exit(int exitcode) {
 	   lock_release(childprocs_lock);
 	   */
     
-  lock_acquire(p->proc_lock);
-  p->ifalive = false;
-  p->exitcode = _MKWAIT_EXIT(exitcode);
-  cv_signal(p->proc_cv, p->proc_lock);
-  lock_release(p->proc_lock);
+  lock_acquire(allprocs_lock);
+  proc_info_table[p->pid].is_alive = false;
+  proc_info_table[p->pid].exitcode = _MKWAIT_EXIT(exitcode);
+  cv_signal(p->proc_cv, allprocs_lock);
+  lock_release(allprocs_lock);
+  
 /*
   if (p->hasparent) {
     struct proc *parent = allprocs[p->parent_pid];
@@ -199,7 +195,7 @@ void sys__exit(int exitcode) {
   /* if this is the last user process in the system, proc_destroy()
      will wake up the kernel menu thread */
   proc_destroy(p);
-  
+
   thread_exit();
   /* thread_exit() does not return, so we should never get here */
   panic("return from thread_exit in sys_exit\n");
@@ -245,25 +241,23 @@ sys_waitpid(pid_t pid,
   /* for now, just pretend the exitstatus is 0 */
 #ifdef OPT_A2
   lock_acquire(allprocs_lock);
-  struct proc *child = allprocs[pid];
+  struct proc *child = proc_info_table[pid].proc;
   if (child == NULL) {
     lock_release(allprocs_lock);
 	  return ESRCH;
   }
-  if (child->parent_pid != curproc->pid) {
+  if (proc_info_table[pid].parent_pid!= curproc->pid) {
     lock_release(allprocs_lock);
     return EPERM;
   }
-  lock_release(allprocs_lock);
 
-  lock_acquire(child->proc_lock);
   if (child->ifalive) {
-	  cv_wait(child->proc_cv, child->proc_lock);
+	  cv_wait(child->proc_cv, allprocs_lock);
   }
 
-  exitstatus = child->exitcode;
-  kprintf("code%d", exitstatus);
-  lock_release(child->proc_lock);
+  exitstatus = proc_info_table[pid].exitcode;
+  //kprintf("code%d", exitstatus);
+  lock_release(allprocs_lock);
 
 #else
   exitstatus = 0;
