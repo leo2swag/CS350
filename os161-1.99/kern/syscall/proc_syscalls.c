@@ -116,7 +116,7 @@ void sys__exit(int exitcode) {
       struct proc *childproc = array_get(childs, i);
       lock_acquire(childproc->exitlock);
       if (childproc->ifalive) {
-        cv_signal(childproc->proc_cv, exitlock);
+        cv_signal(childproc->proc_cv, childproc->exitlock);
       }
       lock_release(childproc->exitlock);
     }
