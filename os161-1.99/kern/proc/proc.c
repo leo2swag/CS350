@@ -298,6 +298,7 @@ proc->proc_cv = cv_create(name);
 KASSERT(proc->proc_cv);
 
 lock_acquire(proc->proc_lock);
+proc->haschild = false;
 proc->ifalive = true;
 proc->childarry = array_create();
 array_init(proc->childarry);
