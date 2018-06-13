@@ -104,7 +104,7 @@ void sys__exit(int exitcode) {
 	   */
   struct array *childs = p->childarry;
   for(unsigned int i = 0; i < childs->num; i++) {
-      struct array *temp = array_get(childs, i);
+      struct proc *temp = array_get(childs, i);
       if (temp->ifalive) {
         temp->parent_pid = -1;
       }
