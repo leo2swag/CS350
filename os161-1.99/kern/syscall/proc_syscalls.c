@@ -44,9 +44,10 @@ int sys_execv(char *progname, char **args) {
     char **kernelprogs = kmalloc(sizeof(char *) * (counter + 1));;
     for (int i = 0; i < counter; i++) {
       size_t argspace = strlen(args[i]) + 1;
-      char *kprog = kmalloc(sizeof(char) * argspace);
-      kernelprogs[i] = kprog;
-      result = copyinstr((const_userptr_t)args[i], kprog, argspace, NULL);
+      //char *kprog = kmalloc(sizeof(char) * argspace);
+      //kernelprogs[i] = kprog;
+      kernelprogs[i] = kmalloc(sizeof(char) * argspace);
+      result = copyinstr((const_userptr_t)args[i], (void *)kernelprogs[i], argspace, NULL);
       if (result) {
         return result;
       }
@@ -106,11 +107,11 @@ int sys_execv(char *progname, char **args) {
     char **argstable = kmalloc(sizeof(char *) * (tablecounter + 1));
     for (int i = tablecounter; i > 0; i--) {
       if (i == tablecounter) {
-        argstable[tablecounter] = NULL;
+        argstable[i] = NULL;
       } else {
         size_t totalsize = ROUNDUP(strlen(kernelprogs[i]) + 1, 8);
         stackptr = totalsize - stackptr;
-        int result = copyoutstr(kernelprogs[i], (userptr_t)stackptr, totalsize, NULL);
+        int result = copyoutstr(（const void *)kernelprogs[i], (userptr_t)stackptr, totalsize, NULL);
         if (result) {
           return result;
         }
@@ -120,7 +121,7 @@ int sys_execv(char *progname, char **args) {
 
     size_t argsize = ROUNDUP(sizeof(char *) * (tablecounter + 1), 8);
     stackptr = argsize - stackptr;
-    result = copyout(argstable, (userptr_t)stackptr, sizeof(char *) * (tablecounter + 1));
+    result = copyout((const void *)argstable, (userptr_t)stackptr, sizeof(char *) * (tablecounter + 1));
     if (result) {
       return result;
     }
