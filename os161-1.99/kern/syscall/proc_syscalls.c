@@ -46,7 +46,7 @@ int sys_execv(char *progname, char **args) {
       size_t argspace = strlen(args[i]) + 1;
       char *kprog = kmalloc(sizeof(char *) * argspace);
       kernelprogs[i] = kprog;
-      int result = copyinstr((const_userptr_t)args[i], kprog, argspace, NULL);
+      result = copyinstr((const_userptr_t)args[i], kprog, argspace, NULL);
       if (result) {
         return result;
       }
@@ -102,7 +102,7 @@ int sys_execv(char *progname, char **args) {
       return result;
     }
 
-    tablecounter = counter;
+    int tablecounter = counter;
     char *argstable[tablecounter+1];
     for (int i = tablecounter; i > 0; i--) {
       if (i == tablecounter) {
@@ -119,15 +119,15 @@ int sys_execv(char *progname, char **args) {
     }
 
     size_t argsize = ROUNDUP(4 * (tablecounter + 1), 8);
-    stackptr = totalsize - stackptr;
-    int result = copyout(argstable, (userptr_t)stackptr, sizeof(char *) * (tablecounter + 1));
+    stackptr = argsize - stackptr;
+    result = copyout(argstable, (userptr_t)stackptr, sizeof(char *) * (tablecounter + 1));
     if (result) {
       return result;
     }
 
  
     as_destroy(oldas);
-    
+
     /* Warp to user mode. */
     enter_new_process(tablecounter, (userptr_t)stackptr,
           stackptr, entrypoint);
