@@ -111,7 +111,7 @@ int sys_execv(char *progname, char **args) {
       } else {
         size_t totalsize = ROUNDUP(strlen(kernelprogs[i]) + 1, 8);
         stackptr = totalsize - stackptr;
-        int result = copyoutstr(（const void *)kernelprogs[i], (userptr_t)stackptr, totalsize, NULL);
+        int result = copyoutstr((const void*)kernelprogs[i], (userptr_t)stackptr, totalsize, NULL);
         if (result) {
           return result;
         }
@@ -121,7 +121,7 @@ int sys_execv(char *progname, char **args) {
 
     size_t argsize = ROUNDUP(sizeof(char *) * (tablecounter + 1), 8);
     stackptr = argsize - stackptr;
-    result = copyout((const void *)argstable, (userptr_t)stackptr, sizeof(char *) * (tablecounter + 1));
+    result = copyout((const void*)argstable, (userptr_t)stackptr, sizeof(char *) * (tablecounter + 1));
     if (result) {
       return result;
     }
