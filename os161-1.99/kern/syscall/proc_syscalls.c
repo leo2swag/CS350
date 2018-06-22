@@ -58,7 +58,7 @@ int sys_execv(char *progname, char **args) {
     //int result;
 
     /* Open the file. */
-    char *progbackup = kstrdup(progbackup);
+    char *progbackup = kstrdup(progname);
     result = vfs_open(progbackup, O_RDONLY, 0, &v);
     if (result) {
       return result;
