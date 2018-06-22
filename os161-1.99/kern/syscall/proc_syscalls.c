@@ -23,50 +23,165 @@
 
 #ifdef OPT_A2
 
-void forked_process(void *tf, unsigned long data) {
-  struct trapframe tflocal = *((struct trapframe *) tf);
-  tflocal.tf_a3 = 0;
-  tflocal.tf_v0 = 0;
-  tflocal.tf_epc += 4;
-  mips_usermode(&tflocal);
-  kfree(tf);
-  (void) data;
-}
+int sys_execv(char *progname, char **args) {
+    //extract space
+    size_t newprogspace = (strlen(progname) + 1);
+    char *newprog = kmalloc(sizeof(char *) * newprogspace);
+    int result = copyinstr((const_userptr_t) progname, newprog, newprogspace, NULL);
+    if (result) {
+      return result;
+    }
 
-int 
-sys_fork(struct trapframe *parent_tf, pid_t *retval) {
-  //create process
-  struct proc *child = proc_create_runprogram(curproc->p_name);
-  if (child == NULL) {
-    return ENOMEM; //out of memory code 
+    //count number of args
+    int counter = 0;
+    int incre = 0;
+    while (args[incre] != NULL) {
+      counter++;
+      incre++;
+    }
+
+    //copy ags into kernel
+    char *kernelprogs[counter];
+    for (int i = 0; i < counter; i++) {
+      size_t argspace = strlen(args[i]) + 1;
+      char *kprog = kmalloc(sizeof(char *) * argspace);
+      kernelprogs[i] = kprog;
+      int result = copyinstr((const_userptr_t)args[i], kprog, argspace, NULL);
+      if (result) {
+        return result;
+      }
+    }
+
+    struct addrspace *as;
+    struct vnode *v;
+    vaddr_t entrypoint, stackptr;
+    //int result;
+
+    /* Open the file. */
+    char *progbackup = kstrdup(progbackup);
+    result = vfs_open(progbackup, O_RDONLY, 0, &v);
+    if (result) {
+      return result;
+    }
+    kfree(progbackup);
+
+    struct addrspace *oldas = curproc_getas();
+    if (oldas != NULL) {
+      curproc_setas(NULL);
+    }
+    /* We should be a new process. */
+    KASSERT(curproc_getas == NULL);
+
+    /* Create a new address space. */
+    as = as_create();
+    if (as ==NULL) {
+      vfs_close(v);
+      return ENOMEM;
+    }
+
+    /* Switch to it and activate it. */
+    curproc_setas(as);
+    as_activate();
+
+    /* Load the executable. */
+    result = load_elf(v, &entrypoint);
+    if (result) {
+      /* p_addrspace will go away when curproc is destroyed */
+      vfs_close(v);
+      return result;
+    }
+
+    /* Done with the file now. */
+    vfs_close(v);
+
+
+    /* Define the user stack in the address space */
+    result = as_define_stack(as, &stackptr);
+    if (result) {
+      /* p_addrspace will go away when curproc is destroyed */
+      return result;
+    }
+
+    tablecounter = counter;
+    char *argstable[tablecounter+1];
+    for (int i = tablecounter; i > 0; i--) {
+      if (i == tablecounter) {
+        argstable[tablecounter] = NULL;
+      } else {
+        size_t totalsize = ROUNDUP(strlen(kernelprogs[i]) + 1, 8);
+        stackptr = totalsize - stackptr;
+        int result = copyoutstr(kernelprogs[i], (userptr_t)stackptr, totalsize, NULL);
+        if (result) {
+          return result;
+        }
+        argstable[i] = (char *)stackptr;
+      }
+    }
+
+    size_t argsize = ROUNDUP(4 * (tablecounter + 1), 8);
+    stackptr = totalsize - stackptr;
+    int result = copyout(argstable, (userptr_t)stackptr, sizeof(char *) * (tablecounter + 1));
+    if (result) {
+      return result;
+    }
+
+ 
+    as_destroy(oldas);
+    
+    /* Warp to user mode. */
+    enter_new_process(tablecounter, (userptr_t)stackptr,
+          stackptr, entrypoint);
+    
+    /* enter_new_process does not return. */
+    panic("enter_new_process returned\n");
+    return EINVAL;
   }
 
-  //create address space
-  struct addrspace *child_addre;
-  int copy_det = as_copy(curproc->p_addrspace, &child_addre);
-  if (copy_det) {
-    proc_destroy(child);
-    return copy_det;
+
+  void forked_process(void *tf, unsigned long data) {
+    struct trapframe tflocal = *((struct trapframe *) tf);
+    tflocal.tf_a3 = 0;
+    tflocal.tf_v0 = 0;
+    tflocal.tf_epc += 4;
+    mips_usermode(&tflocal);
+    kfree(tf);
+    (void) data;
   }
 
-  lock_acquire(allprocs_lock);
-  child->p_addrspace = child_addre;
-  //assign pid
-  proc_info_table[child->pid].parent_pid = curproc->pid;
-  lock_release(allprocs_lock);
+  int 
+  sys_fork(struct trapframe *parent_tf, pid_t *retval) {
+    //create process
+    struct proc *child = proc_create_runprogram(curproc->p_name);
+    if (child == NULL) {
+      return ENOMEM; //out of memory code 
+    }
 
-  //create thread
-  struct trapframe *child_tf = kmalloc(sizeof(struct trapframe));
-  memcpy(child_tf, parent_tf, sizeof(struct trapframe));
-  int thread_det = thread_fork(child->p_name, child, forked_process, child_tf, 0);
-  if (thread_det) {
-    kfree(child_addre);
-    proc_destroy(child);
-    return thread_det;
-  }
+    //create address space
+    struct addrspace *child_addre;
+    int copy_det = as_copy(curproc->p_addrspace, &child_addre);
+    if (copy_det) {
+      proc_destroy(child);
+      return copy_det;
+    }
 
-  *retval = child->pid;
-  return 0;
+    lock_acquire(allprocs_lock);
+    child->p_addrspace = child_addre;
+    //assign pid
+    proc_info_table[child->pid].parent_pid = curproc->pid;
+    lock_release(allprocs_lock);
+
+    //create thread
+    struct trapframe *child_tf = kmalloc(sizeof(struct trapframe));
+    memcpy(child_tf, parent_tf, sizeof(struct trapframe));
+    int thread_det = thread_fork(child->p_name, child, forked_process, child_tf, 0);
+    if (thread_det) {
+      kfree(child_addre);
+      proc_destroy(child);
+      return thread_det;
+    }
+
+    *retval = child->pid;
+    return 0;
 }
 
 #endif
