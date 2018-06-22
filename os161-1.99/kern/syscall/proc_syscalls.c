@@ -42,7 +42,7 @@ int sys_execv(char *progname, char **args) {
 
     //copy ags into kernel
     //char **kernelprogs = kmalloc(sizeof(char *) * (counter + 1));;
-    char *kernelprogs[ounter];
+    char *kernelprogs[counter];
     for (int i = 0; i < counter; i++) {
       size_t argspace = strlen(args[i]) + 1;
       char *kprog = kmalloc(sizeof(char) * argspace);
