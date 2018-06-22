@@ -41,13 +41,14 @@ int sys_execv(char *progname, char **args) {
     }
 
     //copy ags into kernel
-    char **kernelprogs = kmalloc(sizeof(char *) * (counter + 1));;
+    //char **kernelprogs = kmalloc(sizeof(char *) * (counter + 1));;
+    char *kernelprogs[ounter];
     for (int i = 0; i < counter; i++) {
       size_t argspace = strlen(args[i]) + 1;
-      //char *kprog = kmalloc(sizeof(char) * argspace);
-      //kernelprogs[i] = kprog;
-      kernelprogs[i] = kmalloc(sizeof(char) * argspace);
-      result = copyinstr((const_userptr_t)args[i], (void *)kernelprogs[i], argspace, NULL);
+      char *kprog = kmalloc(sizeof(char) * argspace);
+      kernelprogs[i] = kprog;
+      //kernelprogs[i] = kmalloc(sizeof(char) * argspace);
+      result = copyinstr((const_userptr_t)args[i], kprog, argspace, NULL);
       if (result) {
         return result;
       }
@@ -102,14 +103,15 @@ int sys_execv(char *progname, char **args) {
     }
 
     int tablecounter = counter;
-    char **argstable = kmalloc(sizeof(char *) * (tablecounter + 1));
+    char *argstable[tablecounter + 1];
+    //char **argstable = kmalloc(sizeof(char *) * (tablecounter + 1));
     for (int i = tablecounter; i > 0; i--) {
       if (i == tablecounter) {
         argstable[i] = NULL;
       } else {
         size_t totalsize = ROUNDUP(strlen(kernelprogs[i]) + 1, 8);
         stackptr = stackptr - totalsize;
-        int result = copyoutstr((const void*)kernelprogs[i], (userptr_t)stackptr, totalsize, NULL);
+        int result = copyoutstr(kernelprogs[i], (userptr_t)stackptr, totalsize, NULL);
         if (result) {
           return result;
         }
@@ -126,6 +128,7 @@ int sys_execv(char *progname, char **args) {
 
  
     as_destroy(oldas);
+    KASSERT(curproc_getas() == NULL);
 
     /* Warp to user mode. */
     enter_new_process(tablecounter, (userptr_t)stackptr,
