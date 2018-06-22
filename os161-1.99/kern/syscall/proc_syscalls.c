@@ -126,7 +126,7 @@ int sys_execv(char *progname, char **args) {
     }
 
  
-    as_destroy(oldas);
+    //as_destroy(oldas);
     //KASSERT(curproc_getas() == NULL);
 
     /* Warp to user mode. */
