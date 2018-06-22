@@ -67,10 +67,9 @@ int sys_execv(char *progname, char **args) {
     kfree(progbackup);
 
     struct addrspace *oldas = curproc_getas();
-    curproc_setas(NULL);
-    
+    //curproc_setas(NULL);
     /* We should be a new process. */
-    KASSERT(curproc_getas == NULL);
+    //KASSERT(curproc_getas == NULL);
 
     /* Create a new address space. */
     as = as_create();
