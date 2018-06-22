@@ -41,10 +41,10 @@ int sys_execv(char *progname, char **args) {
     }
 
     //copy ags into kernel
-    char *kernelprogs[counter];
+    char **kernelprogs = kmalloc(sizeof(char *) * (counter + 1));;
     for (int i = 0; i < counter; i++) {
       size_t argspace = strlen(args[i]) + 1;
-      char *kprog = kmalloc(sizeof(char *) * argspace);
+      char *kprog = kmalloc(sizeof(char) * argspace);
       kernelprogs[i] = kprog;
       result = copyinstr((const_userptr_t)args[i], kprog, argspace, NULL);
       if (result) {
@@ -103,7 +103,7 @@ int sys_execv(char *progname, char **args) {
     }
 
     int tablecounter = counter;
-    char *argstable[tablecounter+1];
+    char **argstable = kmalloc(sizeof(char *) * (tablecounter + 1));
     for (int i = tablecounter; i > 0; i--) {
       if (i == tablecounter) {
         argstable[tablecounter] = NULL;
@@ -118,7 +118,7 @@ int sys_execv(char *progname, char **args) {
       }
     }
 
-    size_t argsize = ROUNDUP(4 * (tablecounter + 1), 8);
+    size_t argsize = ROUNDUP(sizeof(char *) * (tablecounter + 1), 8);
     stackptr = argsize - stackptr;
     result = copyout(argstable, (userptr_t)stackptr, sizeof(char *) * (tablecounter + 1));
     if (result) {
