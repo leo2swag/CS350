@@ -47,9 +47,10 @@ int sys_execv(char *progname, char **args) {
         kernelprogs[i] = NULL;
       } else {
         size_t argspace = strlen(args[i]) + 1;
-        char *kprog = kmalloc(sizeof(char) * argspace);
-        kernelprogs[i] = kprog;
-        result = copyin((const_userptr_t)args[i], kprog, argspace);
+        //char *kprog = kmalloc(sizeof(char) * argspace);
+        //kernelprogs[i] = kprog;
+        kernelprogs[i] = kmalloc(sizeof(char) * argspace);
+        result = copyin((const_userptr_t)args[i], (void *)kernelprogs[i], argspace);
         if (result) {
           return result;
         }
