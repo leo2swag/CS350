@@ -128,7 +128,7 @@ int sys_execv(char *progname, char **args) {
 
  
     as_destroy(oldas);
-    KASSERT(curproc_getas() == NULL);
+    //KASSERT(curproc_getas() == NULL);
 
     /* Warp to user mode. */
     enter_new_process(tablecounter, (userptr_t)stackptr,
