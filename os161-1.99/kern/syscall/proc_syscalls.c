@@ -108,7 +108,7 @@ int sys_execv(char *progname, char **args) {
     int tablecounter = counter;
     char *argstable[tablecounter + 1];
     //char **argstable = kmalloc(sizeof(char *) * (tablecounter + 1));
-    for (int i = tablecounter; i > 0; i--) {
+    for (int i = tablecounter; i >= 0; i--) {
       if (i == tablecounter) {
         argstable[i] = NULL;
       } else {
