@@ -41,11 +41,8 @@ int sys_execv(char *progname, char **args) {
     }
 
 
-    char *kernelprogs[counter + 1];
-    for (int i = 0; i < counter + 1; i++) {
-      if (i == counter) {
-        kernelprogs[i] = NULL;
-      } else {
+    char *kernelprogs[counter];
+    for (int i = 0; i < counter; i++) {
         size_t argspace = strlen(args[i]) + 1;
         //char *kprog = kmalloc(sizeof(char) * argspace);
         //kernelprogs[i] = kprog;
@@ -54,7 +51,6 @@ int sys_execv(char *progname, char **args) {
         if (result) {
           return result;
         }
-      }
     }
 
     struct addrspace *as;
@@ -124,7 +120,7 @@ int sys_execv(char *progname, char **args) {
 
     size_t argsize = ROUNDUP(sizeof(char *) * (tablecounter + 1), 8);
     stackptr = stackptr - argsize;
-    result = copyout((const void*)argstable, (userptr_t)stackptr, sizeof(char *) * (tablecounter + 1));
+    result = copyout(argstable, (userptr_t)stackptr, sizeof(char *) * (tablecounter + 1));
     if (result) {
       return result;
     }
