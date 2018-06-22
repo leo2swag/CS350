@@ -108,7 +108,7 @@ int sys_execv(char *progname, char **args) {
         argstable[i] = NULL;
       } else {
         size_t totalsize = ROUNDUP(strlen(kernelprogs[i]) + 1, 8);
-        stackptr = tstackptr - totalsize;
+        stackptr = stackptr - totalsize;
         int result = copyoutstr((const void*)kernelprogs[i], (userptr_t)stackptr, totalsize, NULL);
         if (result) {
           return result;
