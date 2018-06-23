@@ -25,7 +25,7 @@
 
 int sys_execv(char *progname, char **args) {
     //extract space
-    size_t newprogspace = (strlen(progname) + 1);
+    size_t newprogspace = strlen(progname) + 1;
     char *newprog = kmalloc(sizeof(char *) * newprogspace);
     int result = copyinstr((const_userptr_t) progname, newprog, newprogspace, NULL);
     if (result) {
@@ -40,15 +40,13 @@ int sys_execv(char *progname, char **args) {
       incre++;
     }
 
-
-    char *kernelprogs[counter+1];
-    kernelprogs[counter] = NULL;
+    char *kernelargs[counter + 1]; //extra space for null elements
+    kernelargs[counter] = NULL; //last element will be null
     for (int i = 0; i < counter; i++) {
         size_t argspace = strlen(args[i]) + 1;
-        //char *kprog = kmalloc(sizeof(char) * argspace);
-        //kernelprogs[i] = kprog;
-        kernelprogs[i] = kmalloc(sizeof(char) * argspace);
-        result = copyinstr((const_userptr_t)args[i], (void *)kernelprogs[i], argspace, NULL);
+        char *k_arg = kmalloc(sizeof(char) * argspace);
+        kernelargs[i] = k_arg; //store in the array
+        result = copyinstr((const_userptr_t)args[i], k_arg, argspace, NULL);
         if (result) {
           return result;
         }
@@ -67,10 +65,8 @@ int sys_execv(char *progname, char **args) {
     }
     kfree(progbackup);
 
-    struct addrspace *oldas = curproc_getas();
-    if (oldas != NULL) {
-      as_destroy(oldas);
-    }
+    struct addrspace *oldas = curproc_getas();// this is the old proc
+
     //curproc_setas(NULL);
     /* We should be a new process. */
     //KASSERT(curproc_getas == NULL);
@@ -106,15 +102,14 @@ int sys_execv(char *progname, char **args) {
     }
 
     int tablecounter = counter;
-    char *argstable[tablecounter + 1];
-    //char **argstable = kmalloc(sizeof(char *) * (tablecounter + 1));
+    char *argstable[tablecounter + 1]; //extra space for null
     for (int i = tablecounter; i >= 0; i--) {
       if (i == tablecounter) {
         argstable[i] = NULL;
       } else {
-        size_t totalsize = ROUNDUP(strlen(kernelprogs[i]) + 1, 8);
+        size_t totalsize = ROUNDUP(strlen(kernelargs[i]) + 1, 8);
         stackptr = stackptr - totalsize;
-        int result = copyoutstr(kernelprogs[i], (userptr_t)stackptr, totalsize, NULL);
+        int result = copyoutstr(kernelargs[i], (userptr_t)stackptr, totalsize, NULL);
         if (result) {
           return result;
         }
@@ -129,8 +124,8 @@ int sys_execv(char *progname, char **args) {
       return result;
     }
 
- 
-    //as_destroy(oldas);
+    
+    as_destroy(oldas); // delete the old proc
     //KASSERT(curproc_getas() == NULL);
 
     /* Warp to user mode. */
