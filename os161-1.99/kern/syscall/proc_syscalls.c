@@ -41,7 +41,6 @@ int sys_execv(char *progname, char **args) {
     }
 
     char *kernelargs[counter + 1]; //extra space for null elements
-    kernelargs[counter] = NULL; //last element will be null
     for (int i = 0; i < counter; i++) {
         size_t argspace = strlen(args[i]) + 1;
         char *k_arg = kmalloc(sizeof(char) * argspace);
@@ -50,7 +49,8 @@ int sys_execv(char *progname, char **args) {
         if (result) {
           return result;
         }
-    }
+      }
+    kernelargs[counter] = NULL; //last element will be null
 
     struct addrspace *as;
     struct vnode *v;
