@@ -295,8 +295,7 @@ vm_fault(int faulttype, vaddr_t faultaddress)
 	#if OPT_A3
 		ehi = faultaddress;
 		elo = paddr | TLBLO_DIRTY | TLBLO_VALID;
-	
-		if (if_read_only && as->hasloaded) {
+		if(if_read_only && as->hasloaded) {
 			elo &= ~TLBLO_DIRTY;
 		}
 		tlb_random(ehi, elo);
@@ -453,7 +452,6 @@ as_complete_load(struct addrspace *as)
 {
 	#if OPT_A3
 		as->hasloaded = true;
-		as_activate();
 	#else
 	(void)as;
 	#endif
