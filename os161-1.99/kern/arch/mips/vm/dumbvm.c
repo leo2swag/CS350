@@ -337,9 +337,9 @@ void
 as_destroy(struct addrspace *as)
 {
 #if OPT_A3
-	kfree((void *)PADDR_TO_KVADDR(as->as_pbase1));
-	kfree((void *)PADDR_TO_KVADDR(as->as_pbase2));
-	kfree((void *)PADDR_TO_KVADDR(as->as_stackpbase));
+	kfree(PADDR_TO_KVADDR(as->as_pbase1));
+	kfree(PADDR_TO_KVADDR(as->as_pbase2));
+	kfree(PADDR_TO_KVADDR(as->as_stackpbase));
 #else
 	kfree(as);
 #endif
