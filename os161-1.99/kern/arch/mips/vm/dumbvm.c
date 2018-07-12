@@ -283,7 +283,7 @@ vm_fault(int faulttype, vaddr_t faultaddress)
 		ehi = faultaddress;
 		elo = paddr | TLBLO_DIRTY | TLBLO_VALID;
 		#if OPT_A3
-			if (if_read_only & as->hasloaded) {
+			if (if_read_only && as->hasloaded) {
 				elo &= ~TLBLO_DIRTY;
 			}
 		#endif
@@ -296,7 +296,7 @@ vm_fault(int faulttype, vaddr_t faultaddress)
 		ehi = faultaddress;
 		elo = paddr | TLBLO_DIRTY | TLBLO_VALID;
 	
-		if (if_read_only & as->hasloaded) {
+		if (if_read_only && as->hasloaded) {
 			elo &= ~TLBLO_DIRTY;
 		}
 		tlb_random(ehi, elo);
