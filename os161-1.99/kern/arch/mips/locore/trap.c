@@ -111,31 +111,7 @@ kill_curthread(vaddr_t epc, unsigned code, vaddr_t vaddr)
 	#if OPT_A3
 		(void) epc;
 		(void) vaddr;
-		struct addrspace *as;
-		struct proc *p = curproc;
-		as_deactivate();
-  /*
-   * clear p_addrspace before calling as_destroy. Otherwise if
-   * as_destroy sleeps (which is quite possible) when we
-   * come back we'll be calling as_activate on a
-   * half-destroyed address space. This tends to be
-   * messily fatal.
-   */
-  as = curproc_setas(NULL);
-  as_destroy(as);
-
-  /* detach this thread from its process */
-  /* note: curproc cannot be used after this call */
-  proc_remthread(curthread);
-
-  /* if this is the last user process in the system, proc_destroy()
-     will wake up the kernel menu thread */
-  proc_destroy(p);
-
-  thread_exit();
-  /* thread_exit() does not return, so we should never get here */
-  panic("return from thread_exit in sys_exit\n");
-
+		sys__exit(sig);
 	#else
 	/*
 	 * You will probably want to change this.
