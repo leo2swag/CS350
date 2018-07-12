@@ -52,8 +52,8 @@
 		paddr_t proc_addr;
 		int otherFrameNum;
 	};
-	struct Mapaddr *coremap;
-	bool kern_call = false;
+	struct Mapaddr * coremap;
+	bool kern_call = true;
 	int numofFrame = 0;
 #endif
 /*
@@ -104,13 +104,13 @@ getppages(unsigned long npages)
 		for (int i = 0; i < numofFrame; i++) {
 			if (coremap[i].otherFrameNum == 0) { //not in use
 				counter = counter + 1;
-				if (counter == (int) npages) {
+				if (counter == (int)npages) {
 					index = i;
 					break;
 				}
 			} else { //current use
 				counter = 0;
-				if (counter == (int) npages) {
+				if (counter == (int)npages) {
 					index = i;
 					break;
 				}
@@ -121,10 +121,10 @@ getppages(unsigned long npages)
 		int found = index - npages + 1;
 		coremap[found].otherFrameNum = (int)npages;
 		addr = coremap[found].proc_addr;
-
+		
 		//update the rest core map
-		for (int i = found+1; i < (int) npages; i++) {
-			coremap[i].otherFrameNum = (int)npages;
+		for (int i = 1; i < (int) npages; i++) {
+			coremap[found+i].otherFrameNum = (int)npages;
 		}
 
 	} else {
@@ -163,8 +163,8 @@ free_kpages(vaddr_t addr)
 		}
 		//free that address and any contiguous frames
 		int pagenum = coremap[init_state].otherFrameNum;
-		for (int i = init_state; i < pagenum; i++) {
-			coremap[i].otherFrameNum = 0;
+		for (int i = 0; i < pagenum; i++) {
+			coremap[init_state + i].otherFrameNum = 0;
 		}
 	#else
 	/* nothing - leak the memory. */
@@ -337,9 +337,9 @@ void
 as_destroy(struct addrspace *as)
 {
 #if OPT_A3
-	kfree((void *)PADDR_TO_KVADDR(as->as_pbase1));
-	kfree((void *)PADDR_TO_KVADDR(as->as_pbase2));
-	kfree((void *)PADDR_TO_KVADDR(as->as_stackpbase));
+	free_kpages(PADDR_TO_KVADDR(as->as_pbase1));
+	free_kpages(PADDR_TO_KVADDR(as->as_pbase2));
+	free_kpages(PADDR_TO_KVADDR(as->as_stackpbase));
 #else
 	kfree(as);
 #endif
