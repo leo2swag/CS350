@@ -56,7 +56,7 @@ struct addrspace {
   size_t as_npages2;
   paddr_t as_stackpbase;
   #if OPT_A3
-    bool elf_complete;
+    bool hasloaded;
   #endif
 };
 
