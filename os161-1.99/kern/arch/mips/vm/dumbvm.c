@@ -68,11 +68,12 @@ vm_bootstrap(void)
 	ram_getsize(&addr_lo, &addr_hi);
 	//get the number of frames
 	coremap = (struct Mapaddr *) PADDR_TO_KVADDR(addr_lo);
-	numofFrame = (addr_hi - addr_lo) / PAGE_SIZE;
+	
 	paddr_t addr_new_lo = ROUNDUP(addr_lo + (numofFrame * sizeof(struct Mapaddr)), PAGE_SIZE);
 
 	//set up the first proc address for core map[0]
 	//should be right above the coremap addr
+	numofFrame = (addr_hi - addr_new_lo) / PAGE_SIZE;
 	coremap[0].proc_addr = addr_new_lo;
 	coremap[0].otherFrameNum = 0;
 
@@ -115,7 +116,7 @@ getppages(unsigned long npages)
 		}
 
 		//return the addr
-		int found = index - (npages - 1);
+		int found = index - npages + 1;
 		coremap[found].otherFrameNum = (int)npages;
 		addr = coremap[found].proc_addr;
 
@@ -295,7 +296,7 @@ vm_fault(int faulttype, vaddr_t faultaddress)
 	#if OPT_A3
 		ehi = faultaddress;
 		elo = paddr | TLBLO_DIRTY | TLBLO_VALID;
-		if(if_read_only && as->hasloaded) {
+		if (if_read_only && as->hasloaded) {
 			elo &= ~TLBLO_DIRTY;
 		}
 		tlb_random(ehi, elo);
@@ -452,6 +453,7 @@ as_complete_load(struct addrspace *as)
 {
 	#if OPT_A3
 		as->hasloaded = true;
+		as_activate();
 	#else
 	(void)as;
 	#endif
