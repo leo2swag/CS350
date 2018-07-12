@@ -40,6 +40,7 @@
 #include <mainbus.h>
 #include <syscall.h>
 
+#include <opt-A3.h>
 
 /* in exception.S */
 extern void asm_usermode(struct trapframe *tf);
@@ -134,7 +135,7 @@ kill_curthread(vaddr_t epc, unsigned code, vaddr_t vaddr)
   thread_exit();
   /* thread_exit() does not return, so we should never get here */
   panic("return from thread_exit in sys_exit\n");
-  
+
 	#else
 	/*
 	 * You will probably want to change this.
