@@ -38,8 +38,6 @@
 #include <addrspace.h>
 #include <vm.h>
 
-#include <opt-A3.h>
-
 /*
  * Dumb MIPS-only "VM system" that is intended to only be just barely
  * enough to struggle off the ground.
@@ -47,41 +45,47 @@
 
 /* under dumbvm, always have 48k of user stack */
 #define DUMBVM_STACKPAGES    12
-
+#if OPT_A3
+	struct Mapaddr {
+		paddr_t proc_addr;
+		int otherFrameNum;
+	};
+	struct Mapaddr *coremap;
+	bool kern_call = false;
+	int numofFrame = 0;
+#endif
 /*
  * Wrap rma_stealmem in a spinlock.
  */
 static struct spinlock stealmem_lock = SPINLOCK_INITIALIZER;
 
-#if OPT_A3
-	int * coremap;
-	int numFrame = 0;
-	paddr_t addr_lo;
-	paddr_t addr_hi;
-	bool kernel_call = true;
-#endif
-
 void
 vm_bootstrap(void)
 {
-	/* Do nothing. */
-#if OPT_A3
+	#if OPT_A3
+	paddr_t addr_lo;
+	paddr_t addr_hi;
 	ram_getsize(&addr_lo, &addr_hi);
-	numFrame = (addr_hi - addr_lo) / PAGE_SIZE;
+	//get the number of frames
+	coremap = (struct Mapaddr *) PADDR_TO_KVADDR(addr_lo);
+	
+	paddr_t addr_new_lo = ROUNDUP(addr_lo + (numofFrame * sizeof(struct Mapaddr)), PAGE_SIZE);
 
-	coremap = (int*) PADDR_TO_KVADDR(addr_lo);
+	//set up the first proc address for core map[0]
+	//should be right above the coremap addr
+	numofFrame = (addr_hi - addr_new_lo) / PAGE_SIZE;
+	coremap[0].proc_addr = addr_new_lo;
+	coremap[0].otherFrameNum = 0;
 
-	addr_lo = addr_lo + numFrame * sizeof(int);
-	addr_lo = ROUNDUP(addr_lo, PAGE_SIZE);
-
-	numFrame = (addr_hi - addr_lo) / PAGE_SIZE;
-
-	for (int i = 0; i < numFrame; ++i) {
-		coremap[i] = 0;
+	//finish the coremap init
+	for (int i = 1; i < numofFrame; i++) {
+		addr_new_lo = addr_new_lo + PAGE_SIZE;
+		coremap[i].proc_addr = addr_new_lo;
+		coremap[i].otherFrameNum = 0;
 	}
+	kern_call = false;
 
-	kernel_call = false;
-#endif
+	#endif
 }
 
 static
@@ -91,29 +95,42 @@ getppages(unsigned long npages)
 	paddr_t addr;
 
 	spinlock_acquire(&stealmem_lock);
-#if OPT_A3
-	if (kernel_call) {
-		addr = ram_stealmem(npages);
-	} else {
-		int i = 0;
-		int count = 0;
-		for (; i < numFrame; ++i) {
-			if (coremap[i] == 0) { 
-				++count;
-			} else { 
-				count = 0;
+	#if OPT_A3
+	if (kern_call == false) { //not the kern_call
+		int index = 0;
+		int counter = 0;
+		for (int i = 0; i < numofFrame; i++) {
+			if (coremap[i].otherFrameNum == 0) { //not in use
+				counter = counter + 1;
+				if (counter == (int) npages) {
+					index = i;
+					break;
+				}
+			} else { //current use
+				counter = 0;
+				if (counter == (int) npages) {
+					index = i;
+					break;
+				}
 			}
-			if (count == (int)npages) { break; }
 		}
-		int start_index = i - npages + 1;
-		for(i = 0; i < (int)npages; ++i) {
-			coremap[start_index + i] = (int)npages;
+
+		//return the addr
+		int found = index - npages + 1;
+		coremap[found].otherFrameNum = (int)npages;
+		addr = coremap[found].proc_addr;
+
+		//update the rest core map
+		for (int i = found+1; i < (int) npages; i++) {
+			coremap[i].otherFrameNum = (int)npages;
 		}
-		addr = addr_lo + start_index * PAGE_SIZE;
+
+	} else {
+		addr = ram_stealmem(npages)
 	}
-#else
+	#else
 	addr = ram_stealmem(npages);
-#endif
+	#endif
 	spinlock_release(&stealmem_lock);
 	return addr;
 }
@@ -133,16 +150,25 @@ alloc_kpages(int npages)
 void 
 free_kpages(vaddr_t addr)
 {
-#if OPT_A3
-	int start_index = (PADDR_TO_KVADDR(addr) - addr_lo) / PAGE_SIZE;
-	int nppages = coremap[start_index];
-	for (int i = 0; i < nppages; ++i) {
-		coremap[start_index + i] = 0;
-	}
-#else
+	#if OPT_A3
+		//find that addr first
+		int init_state = 0;
+		for (int i = 0; i < numofFrame; i++) {
+			if (coremap[i].proc_addr == addr) {
+				init_state = i;
+				break;
+			}
+		}
+		//free that address and any contiguous frames
+		int pagenum = coremap[init_state].otherFrameNum;
+		for (int i = init_state; i < pagenum; i++) {
+			coremap[i].otherFrameNum = 0;
+		}
+	#else
 	/* nothing - leak the memory. */
+
 	(void)addr;
-#endif
+	#endif
 }
 
 void
@@ -167,22 +193,21 @@ vm_fault(int faulttype, vaddr_t faultaddress)
 	uint32_t ehi, elo;
 	struct addrspace *as;
 	int spl;
-#if OPT_A3
-	bool read_only_text = false;
-#endif
-
+	#if OPT_A3
+		bool if_read_only = false;
+	#endif
 	faultaddress &= PAGE_FRAME;
 
 	DEBUG(DB_VM, "dumbvm: fault: 0x%x\n", faultaddress);
 
 	switch (faulttype) {
 		case VM_FAULT_READONLY:
-	#if OPT_A3
-		return EFAULT;
-	#else
+		#if OPT_A3
+			return EFAULT;
+		#else
 		/* We always create pages read-write, so we can't get this */
 		panic("dumbvm: got VM_FAULT_READONLY\n");
-	#endif
+		#endif
 	    case VM_FAULT_READ:
 	    case VM_FAULT_WRITE:
 		break;
@@ -232,7 +257,7 @@ vm_fault(int faulttype, vaddr_t faultaddress)
 	if (faultaddress >= vbase1 && faultaddress < vtop1) {
 		paddr = (faultaddress - vbase1) + as->as_pbase1;
 		#if OPT_A3
-			read_only_text = true;
+			if_read_only = true;
 		#endif
 	}
 	else if (faultaddress >= vbase2 && faultaddress < vtop2) {
@@ -259,7 +284,7 @@ vm_fault(int faulttype, vaddr_t faultaddress)
 		ehi = faultaddress;
 		elo = paddr | TLBLO_DIRTY | TLBLO_VALID;
 		#if OPT_A3
-			if (as->hasloaded && read_only_text) {
+			if (if_read_only && as->hasloaded) {
 				elo &= ~TLBLO_DIRTY;
 			}
 		#endif
@@ -268,20 +293,21 @@ vm_fault(int faulttype, vaddr_t faultaddress)
 		splx(spl);
 		return 0;
 	}
-#if OPT_A3
-	ehi = faultaddress;
-	elo = paddr | TLBLO_DIRTY | TLBLO_VALID;
-	if (as->hasloaded && read_only_text) {
-		elo &= ~TLBLO_DIRTY;
-	}
-	tlb_random(ehi, elo);
-	splx(spl);
-	return 0;
-#else
+	#if OPT_A3
+		ehi = faultaddress;
+		elo = paddr | TLBLO_DIRTY | TLBLO_VALID;
+		if (if_read_only && as->hasloaded) {
+			elo &= ~TLBLO_DIRTY;
+		}
+		tlb_random(ehi, elo);
+		splx(spl);
+		return 0;
+
+	#else
 	kprintf("dumbvm: Ran out of TLB entries - cannot handle page fault\n");
 	splx(spl);
 	return EFAULT;
-#endif
+	#endif
 }
 
 struct addrspace *
@@ -299,11 +325,9 @@ as_create(void)
 	as->as_pbase2 = 0;
 	as->as_npages2 = 0;
 	as->as_stackpbase = 0;
-
 	#if OPT_A3
 	as->hasloaded = false;
 	#endif
-
 	return as;
 }
 
@@ -311,13 +335,12 @@ void
 as_destroy(struct addrspace *as)
 {
 #if OPT_A3
-	if (as != NULL) {
-		free_kpages(PADDR_TO_KVADDR(as->as_pbase1));
-		free_kpages(PADDR_TO_KVADDR(as->as_pbase2));
-		free_kpages(PADDR_TO_KVADDR(as->as_stackpbase));
-	}
-#endif
+	kfree(PADDR_TO_KVADDR(as->as_pbase1));
+	kfree(PADDR_TO_KVADDR(as->as_pbase2));
+	kfree(PADDR_TO_KVADDR(as->as_stackpbase));
+#else
 	kfree(as);
+#endif
 }
 
 void
@@ -430,9 +453,9 @@ as_complete_load(struct addrspace *as)
 {
 	#if OPT_A3
 		as->hasloaded = true;
-		as_activate();
+		
 	#else
-		(void)as;
+	(void)as;
 	#endif
 	return 0;
 }
