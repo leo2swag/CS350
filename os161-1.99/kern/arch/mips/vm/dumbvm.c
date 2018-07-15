@@ -71,7 +71,7 @@ vm_bootstrap(void)
 	ram_getsize(&addr_lo, &addr_hi);
 	//get the number of frames
 	coremap = (struct Mapaddr *) PADDR_TO_KVADDR(addr_lo);
-	numFrame = (addr_hi - addr_lo) / PAGE_SIZE;
+	numofFrame = (addr_hi - addr_lo) / PAGE_SIZE;
 	paddr_t addr_new_lo = ROUNDUP(addr_lo + (numofFrame * sizeof(struct Mapaddr)), PAGE_SIZE);
 
 	//set up the first proc address for core map[0]
