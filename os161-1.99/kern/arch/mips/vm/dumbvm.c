@@ -55,6 +55,7 @@
 	struct Mapaddr * coremap;
 	bool kern_call = true;
 	int numofFrame = 0;
+	//int total_with_coremap_numofFrame = 0;
 #endif
 /*
  * Wrap rma_stealmem in a spinlock.
@@ -71,12 +72,14 @@ vm_bootstrap(void)
 	ram_getsize(&addr_lo, &addr_hi);
 	//get the number of frames
 	coremap = (struct Mapaddr *) PADDR_TO_KVADDR(addr_lo);
+	//include coremap num of frames
 	numofFrame = (addr_hi - addr_lo) / PAGE_SIZE;
 	paddr_t addr_new_lo = ROUNDUP(addr_lo + (numofFrame * sizeof(struct Mapaddr)), PAGE_SIZE);
 
 	//set up the first proc address for core map[0]
 	//should be right above the coremap addr
-	numofFrame = (addr_hi - addr_new_lo) / PAGE_SIZE;
+	//does not include coremap (num of frames)
+	//numofFrame = (addr_hi - addr_new_lo) / PAGE_SIZE;
 	coremap[0].proc_addr = addr_new_lo;
 	coremap[0].otherFrameNum = 0;
 
@@ -99,9 +102,9 @@ getppages(unsigned long npages)
 
 	spinlock_acquire(&stealmem_lock);
 	#if OPT_A3
+	int index = 0;
+	int counter = 0;
 	if (kern_call == false) { //not the kern_call
-		int index = 0;
-		int counter = 0;
 		for (int i = 0; i < numofFrame; i++) {
 			if (coremap[i].otherFrameNum == 0) { //not in use
 				counter = counter + 1;
