@@ -50,15 +50,14 @@
 #if OPT_A3
 	struct Mapaddr {
 		paddr_t proc_addr;
-		int otherFrameNum;
+		int alloc_num;
 	};
 	struct Mapaddr * coremap;
 	bool kern_call = true;
 	int numofFrame = 0;
 	int total_with_coremap_numofFrame = 0;
 	paddr_t addr_new_lo;
-	paddr_t addr_lo;
-	paddr_t addr_hi;
+
 #endif
 /*
  * Wrap rma_stealmem in a spinlock.
@@ -69,7 +68,7 @@ void
 vm_bootstrap(void)
 {
 	#if OPT_A3
-	/*
+	
 	paddr_t addr_lo;
 	paddr_t addr_hi;
 	
@@ -84,7 +83,7 @@ vm_bootstrap(void)
 	
 	addr_new_lo = ROUNDUP(addr_lo + (total_with_coremap_numofFrame * sizeof(struct Mapaddr)), PAGE_SIZE);
 	coremap[0].proc_addr = addr_new_lo;
-	coremap[0].otherFrameNum = 0;
+	coremap[0].alloc_num = 0;
 	
 	//update the numofFrame that does not include the coremap size
 	numofFrame = (addr_hi - addr_new_lo) / PAGE_SIZE;
@@ -93,25 +92,8 @@ vm_bootstrap(void)
 	for (int i = 1; i < numofFrame; i++) {
 		addr_new_lo = addr_new_lo + PAGE_SIZE;
 		coremap[i].proc_addr = addr_new_lo;
-		coremap[i].otherFrameNum = 0;
+		coremap[i].alloc_num = 0;
 	}
-	kern_call = false;
-*/
-	ram_getsize(&addr_lo, &addr_hi);
-	numofFrame = (addr_hi - addr_lo) / PAGE_SIZE;
-
-	coremap = (struct Mapaddr *) PADDR_TO_KVADDR(addr_lo);
-
-	addr_lo = addr_lo + numofFrame * sizeof(struct Mapaddr);
-	addr_lo = ROUNDUP(addr_lo, PAGE_SIZE);
-
-	numofFrame = (addr_hi - addr_lo) / PAGE_SIZE;
-
-	for (int i = 0; i < numofFrame; ++i) {
-		coremap[i].otherFrameNum = 0;
-		
-	}
-
 	kern_call = false;
 
 	#endif
@@ -125,20 +107,21 @@ getppages(unsigned long npages)
 
 	spinlock_acquire(&stealmem_lock);
 	#if OPT_A3
-	/*
+	
 	int index = 0;
 	int counter = 0;
+	int npages = (int) npages;
 	if (kern_call == false) { //not the kern_call
 		for (int i = 0; i < numofFrame; i++) {
-			if (coremap[i].otherFrameNum == 0) { //not in use
+			if (coremap[i].alloc_num == 0) { //not in use
 				counter = counter + 1;
-				if (counter == (int)npages) {
+				if (counter == npages) {
 					index = i;
 					break;
 				}
 			} else { //current use
 				counter = 0;
-				if (counter == (int)npages) {
+				if (counter == npages) {
 					index = i;
 					break;
 				}
@@ -147,9 +130,12 @@ getppages(unsigned long npages)
 
 		//return the addr
 		int found = index - npages + 1;
-		coremap[found].otherFrameNum = (int)npages;
+		//update the coremap with given index
+		coremap[found].alloc_num = npages;
 
-		paddr_t test = addr_new_lo + found * PAGE_SIZE;
+		//offset + index * pagesize
+		addr = addr_new_lo + found * PAGE_SIZE;
+		/*
 		int tt = 0;
 		for (int i =0; i < numofFrame; i++) {
 			if (coremap[i].proc_addr == test) {
@@ -157,49 +143,22 @@ getppages(unsigned long npages)
 				break;
 			}
 		}
-		kprintf("tt %d\n",tt);
-		kprintf("ff %d\n",found);
+		*/
+		//kprintf("tt %d\n",tt);
+		//kprintf("ff %d\n",found);
 		//addr = coremap[found].proc_addr;
-		addr = test;
-		KASSERT(test==addr);
+		//addr = test;
+		//KASSERT(test==addr);
 		
 		//update the rest core map
-		for (int i = 0; i < (int) npages; i++) {
-			coremap[found+i].otherFrameNum = (int)npages;
+		for (int i = 1; i < npages; i++) {
+			coremap[found+i].alloc_num = npages;
 		}
 
 	} else {
 		addr = ram_stealmem(npages);
 	}
-	*/
-	if (kern_call) {
-		addr = ram_stealmem(npages);
-	} else {
-		int index = 0;
-		int counter = 0;
-		for (int i = 0; i < numofFrame; i++) {
-			if (coremap[i].otherFrameNum == 0) { //not in use
-				counter = counter + 1;
-				if (counter == (int)npages) {
-					index = i;
-					break;
-				}
-			} else { //current use
-				counter = 0;
-				if (counter == (int)npages) {
-					index = i;
-					break;
-				}
-			}
-		}
-		int start_index = index - npages + 1;
-		for(int i = 0; i < (int)npages; ++i) {
-			coremap[start_index + i].otherFrameNum = (int)npages;
-		}
-		addr = addr_lo + start_index * PAGE_SIZE;
-		kprintf("tt %d\n",index);
-		kprintf("ff %d\n",start_index);
-	}
+	
 
 	#else
 	addr = ram_stealmem(npages);
@@ -226,6 +185,7 @@ free_kpages(vaddr_t addr)
 	#if OPT_A3
 		spinlock_acquire(&stealmem_lock);
 		//find that addr first
+		/*
 		int init_state = 0;
 		for (int i = 0; i < numofFrame; i++) {
 			if (coremap[i].proc_addr == addr) {
@@ -233,15 +193,14 @@ free_kpages(vaddr_t addr)
 				break;
 			}
 		}
-
-		int test_index = (PADDR_TO_KVADDR(addr) - addr_lo) / PAGE_SIZE;
+		*/
+		int init_state = (KVADDR_TO_PADDR(addr) - addr_new_lo) / PAGE_SIZE;
 		//KASSERT(test_index==init_state);
-		init_state = test_index;
-		kprintf("hi, we are here");
+		//kprintf("one process down");
 		//free that address and any contiguous frames
-		int pagenum = coremap[init_state].otherFrameNum;
+		int pagenum = coremap[init_state].alloc_num;
 		for (int i = 0; i < pagenum; i++) {
-			coremap[init_state + i].otherFrameNum = 0;
+			coremap[init_state + i].alloc_num = 0;
 		}
 		spinlock_release(&stealmem_lock);
 	#else
