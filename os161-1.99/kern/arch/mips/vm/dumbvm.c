@@ -130,9 +130,10 @@ getppages(unsigned long npages)
 
 		//find the starting index
 		int found = index - int_npages + 1;
-		//update the coremap with given index
-		coremap[found].alloc_num = int_npages;
-
+		//update the coremap with given index with one allocation
+		if (int_int_npages == 1) {
+			coremap[found].alloc_num = int_npages;
+		}
 		//offset + index * pagesize
 		addr = addr_new_lo + found * PAGE_SIZE;
 		/*
@@ -150,9 +151,13 @@ getppages(unsigned long npages)
 		//addr = test;
 		//KASSERT(test==addr);
 		
-		//update the rest core map
-		for (int i = 1; i < int_npages; i++) {
-			coremap[found+i].alloc_num = int_npages;
+		//update the rest core map with more than 1 allocation
+		if (int_int_npages > 1) {
+			int value = int_npages;
+			for (int i = 0; i < int_npages; i++) {
+				coremap[found+i].alloc_num = value;
+				value--;
+			}
 		}
 
 	} else {
