@@ -174,7 +174,7 @@ free_kpages(vaddr_t addr)
 		}
 
 		int test_index = (PADDR_TO_KVADDR(addr) - addr_new_lo) / PAGE_SIZE;
-		KASSERT(test==init_state);
+		KASSERT(test_index==init_state);
 		//free that address and any contiguous frames
 		int pagenum = coremap[init_state].otherFrameNum;
 		for (int i = 0; i < pagenum; i++) {
