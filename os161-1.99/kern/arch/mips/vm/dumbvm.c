@@ -80,7 +80,6 @@ vm_bootstrap(void)
 
 	//set up the first proc address for core map[0]
 	//should be right above the coremap addr
-	
 	addr_new_lo = ROUNDUP(addr_lo + (total_with_coremap_numofFrame * sizeof(struct Mapaddr)), PAGE_SIZE);
 	coremap[0].proc_addr = addr_new_lo;
 	coremap[0].alloc_num = 0;
@@ -129,7 +128,7 @@ getppages(unsigned long npages)
 			}
 		}
 
-		//return the addr
+		//find the starting index
 		int found = index - int_npages + 1;
 		//update the coremap with given index
 		coremap[found].alloc_num = int_npages;
@@ -195,7 +194,9 @@ free_kpages(vaddr_t addr)
 			}
 		}
 		*/
-		int init_state = (PADDR_TO_KVADDR(addr) - addr_new_lo) / PAGE_SIZE;
+
+		//transfer the addr to padd and find the starting index
+		int init_state = (KVADDR_TO_PADDR(addr) - addr_new_lo) / PAGE_SIZE;
 		//KASSERT(test_index==init_state);
 		//kprintf("one process down");
 		//free that address and any contiguous frames
@@ -493,7 +494,6 @@ as_complete_load(struct addrspace *as)
 {
 	#if OPT_A3
 		as->hasloaded = true;
-		as_activate();
 	#else
 	(void)as;
 	#endif
