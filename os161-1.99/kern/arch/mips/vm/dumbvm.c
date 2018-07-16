@@ -56,6 +56,7 @@
 	bool kern_call = true;
 	int numofFrame = 0;
 	int total_with_coremap_numofFrame = 0;
+	paddr_t addr_new_lo;
 #endif
 /*
  * Wrap rma_stealmem in a spinlock.
@@ -78,7 +79,7 @@ vm_bootstrap(void)
 	//set up the first proc address for core map[0]
 	//should be right above the coremap addr
 	
-	paddr_t addr_new_lo = ROUNDUP(addr_lo + (total_with_coremap_numofFrame * sizeof(struct Mapaddr)), PAGE_SIZE);
+	addr_new_lo = ROUNDUP(addr_lo + (total_with_coremap_numofFrame * sizeof(struct Mapaddr)), PAGE_SIZE);
 	coremap[0].proc_addr = addr_new_lo;
 	coremap[0].otherFrameNum = 0;
 	
@@ -127,9 +128,9 @@ getppages(unsigned long npages)
 		int found = index - npages + 1;
 		coremap[found].otherFrameNum = (int)npages;
 
-		paddr_t test = addr_new_lo + found * PAGE_Size;
+		paddr_t test = addr_new_lo + found * PAGE_SIZE;
 		addr = coremap[found].proc_addr;
-		KASSERT(test!=addr);
+		KASSERT(test==addr);
 		
 		//update the rest core map
 		for (int i = 1; i < (int) npages; i++) {
