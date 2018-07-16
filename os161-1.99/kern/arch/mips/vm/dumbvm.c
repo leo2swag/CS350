@@ -131,7 +131,7 @@ getppages(unsigned long npages)
 		//find the starting index
 		int found = index - int_npages + 1;
 		//update the coremap with given index with one allocation
-		if (int_int_npages == 1) {
+		if (int_npages == 1) {
 			coremap[found].alloc_num = int_npages;
 		}
 		//offset + index * pagesize
