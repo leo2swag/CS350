@@ -129,6 +129,15 @@ getppages(unsigned long npages)
 		coremap[found].otherFrameNum = (int)npages;
 
 		paddr_t test = addr_new_lo + found * PAGE_SIZE;
+		int tt = 0;
+		for (int i =0; i < numofFrame; i++) {
+			if (coremap[i].proc_addr == test) {
+				tt = i;
+				break;
+			}
+		}
+		printf("tt %d,i");
+		printf("ff %d,found");
 		addr = coremap[found].proc_addr;
 		KASSERT(test==addr);
 		
