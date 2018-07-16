@@ -194,7 +194,7 @@ free_kpages(vaddr_t addr)
 			}
 		}
 		*/
-		int init_state = (KVADDR_TO_PADDR(addr) - addr_new_lo) / PAGE_SIZE;
+		int init_state = (PADDR_TO_KVADDR(addr) - addr_new_lo) / PAGE_SIZE;
 		//KASSERT(test_index==init_state);
 		//kprintf("one process down");
 		//free that address and any contiguous frames
