@@ -159,6 +159,7 @@ void
 free_kpages(vaddr_t addr)
 {
 	#if OPT_A3
+		spinlock_acquire(&stealmem_lock);
 		//find that addr first
 		int init_state = 0;
 		for (int i = 0; i < numofFrame; i++) {
@@ -172,6 +173,7 @@ free_kpages(vaddr_t addr)
 		for (int i = 0; i < pagenum; i++) {
 			coremap[init_state + i].otherFrameNum = 0;
 		}
+		spinlock_release(&stealmem_lock);
 	#else
 	/* nothing - leak the memory. */
 
