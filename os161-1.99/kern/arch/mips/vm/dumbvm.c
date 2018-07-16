@@ -57,6 +57,8 @@
 	int numofFrame = 0;
 	int total_with_coremap_numofFrame = 0;
 	paddr_t addr_new_lo;
+	paddr_t addr_lo;
+	paddr_t addr_hi;
 #endif
 /*
  * Wrap rma_stealmem in a spinlock.
@@ -67,6 +69,7 @@ void
 vm_bootstrap(void)
 {
 	#if OPT_A3
+	/*
 	paddr_t addr_lo;
 	paddr_t addr_hi;
 	
@@ -93,6 +96,23 @@ vm_bootstrap(void)
 		coremap[i].otherFrameNum = 0;
 	}
 	kern_call = false;
+*/
+	ram_getsize(&addr_lo, &addr_hi);
+	numofFrame = (addr_hi - addr_lo) / PAGE_SIZE;
+
+	coremap = (struct Mapaddr *) PADDR_TO_KVADDR(addr_lo);
+
+	addr_lo = addr_lo + numofFrame * sizeof(struct Mapaddr);
+	addr_lo = ROUNDUP(addr_lo, PAGE_SIZE);
+
+	numofFrame = (addr_hi - addr_lo) / PAGE_SIZE;
+
+	for (int i = 0; i < numofFrame; ++i) {
+		coremap[i].otherFrameNum = 0;
+		
+	}
+
+	kernel_call = false;
 
 	#endif
 }
@@ -105,6 +125,7 @@ getppages(unsigned long npages)
 
 	spinlock_acquire(&stealmem_lock);
 	#if OPT_A3
+	/*
 	int index = 0;
 	int counter = 0;
 	if (kern_call == false) { //not the kern_call
@@ -143,13 +164,36 @@ getppages(unsigned long npages)
 		KASSERT(test==addr);
 		
 		//update the rest core map
-		for (int i = 1; i < (int) npages; i++) {
+		for (int i = 0; i < (int) npages; i++) {
 			coremap[found+i].otherFrameNum = (int)npages;
 		}
 
 	} else {
 		addr = ram_stealmem(npages);
 	}
+	*/
+	if (kernel_call) {
+		addr = ram_stealmem(npages);
+	} else {
+		int i = 0;
+		int count = 0;
+		for (; i < numofFrame; ++i) {
+			if (coremap[i].otherFrameNum == 0) { 
+				++count;
+			} else { 
+				count = 0;
+			}
+			if (count == (int)npages) { break; }
+		}
+		int start_index = i - npages + 1;
+		for(i = 0; i < (int)npages; ++i) {
+			coremap[start_index + i].otherFrameNum = (int)npages;
+		}
+		addr = addr_lo + start_index * PAGE_SIZE;
+		kprintf("tt %d\n",i);
+		kprintf("ff %d\n",start_index);
+	}
+
 	#else
 	addr = ram_stealmem(npages);
 	#endif
