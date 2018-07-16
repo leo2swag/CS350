@@ -89,9 +89,10 @@ vm_bootstrap(void)
 	numofFrame = (addr_hi - addr_new_lo) / PAGE_SIZE;
 
 	//finish the coremap init
+	paddr_t acc_addr = addr_new_lo;
 	for (int i = 1; i < numofFrame; i++) {
-		addr_new_lo = addr_new_lo + PAGE_SIZE;
-		coremap[i].proc_addr = addr_new_lo;
+		acc_addr = acc_addr + PAGE_SIZE;
+		coremap[i].proc_addr = acc_addr;
 		coremap[i].alloc_num = 0;
 	}
 	kern_call = false;
