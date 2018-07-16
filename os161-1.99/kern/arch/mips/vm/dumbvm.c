@@ -129,7 +129,7 @@ getppages(unsigned long npages)
 
 		paddr_t test = addr_new_lo + found * PAGE_Size;
 		addr = coremap[found].proc_addr;
-		KASSERT(test==addr);
+		KASSERT(test!=addr);
 		
 		//update the rest core map
 		for (int i = 1; i < (int) npages; i++) {
