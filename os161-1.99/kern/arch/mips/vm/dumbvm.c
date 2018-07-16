@@ -138,7 +138,8 @@ getppages(unsigned long npages)
 		}
 		kprintf("tt %d\n",tt);
 		kprintf("ff %d\n",found);
-		addr = coremap[found].proc_addr;
+		//addr = coremap[found].proc_addr;
+		addr = test;
 		KASSERT(test==addr);
 		
 		//update the rest core map
