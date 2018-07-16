@@ -112,7 +112,7 @@ vm_bootstrap(void)
 		
 	}
 
-	kernel_call = false;
+	kern_call = false;
 
 	#endif
 }
@@ -172,7 +172,7 @@ getppages(unsigned long npages)
 		addr = ram_stealmem(npages);
 	}
 	*/
-	if (kernel_call) {
+	if (kern_call) {
 		addr = ram_stealmem(npages);
 	} else {
 		int i = 0;
