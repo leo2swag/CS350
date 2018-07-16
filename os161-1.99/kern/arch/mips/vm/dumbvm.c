@@ -175,22 +175,29 @@ getppages(unsigned long npages)
 	if (kern_call) {
 		addr = ram_stealmem(npages);
 	} else {
-		int i = 0;
-		int count = 0;
-		for (; i < numofFrame; ++i) {
-			if (coremap[i].otherFrameNum == 0) { 
-				++count;
-			} else { 
-				count = 0;
+		int index = 0;
+		int counter = 0;
+		for (int i = 0; i < numofFrame; i++) {
+			if (coremap[i].otherFrameNum == 0) { //not in use
+				counter = counter + 1;
+				if (counter == (int)npages) {
+					index = i;
+					break;
+				}
+			} else { //current use
+				counter = 0;
+				if (counter == (int)npages) {
+					index = i;
+					break;
+				}
 			}
-			if (count == (int)npages) { break; }
 		}
 		int start_index = i - npages + 1;
 		for(i = 0; i < (int)npages; ++i) {
 			coremap[start_index + i].otherFrameNum = (int)npages;
 		}
 		addr = addr_lo + start_index * PAGE_SIZE;
-		kprintf("tt %d\n",i);
+		kprintf("tt %d\n",index);
 		kprintf("ff %d\n",start_index);
 	}
 
