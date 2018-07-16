@@ -136,8 +136,8 @@ getppages(unsigned long npages)
 				break;
 			}
 		}
-		kprintf("tt %d,i\n");
-		kprintf("ff %d,found\n");
+		kprintf("tt %d\n",tt);
+		kprintf("ff %d\n",found);
 		addr = coremap[found].proc_addr;
 		KASSERT(test==addr);
 		
