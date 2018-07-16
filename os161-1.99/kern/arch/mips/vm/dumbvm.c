@@ -193,7 +193,7 @@ getppages(unsigned long npages)
 			}
 		}
 		int start_index = index - npages + 1;
-		for(i = 0; i < (int)npages; ++i) {
+		for(int i = 0; i < (int)npages; ++i) {
 			coremap[start_index + i].otherFrameNum = (int)npages;
 		}
 		addr = addr_lo + start_index * PAGE_SIZE;
