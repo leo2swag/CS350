@@ -126,7 +126,10 @@ getppages(unsigned long npages)
 		//return the addr
 		int found = index - npages + 1;
 		coremap[found].otherFrameNum = (int)npages;
+
+		paddr_t test = addr_new_lo + found * PAGE_Size;
 		addr = coremap[found].proc_addr;
+		KASSERT(test==addr);
 		
 		//update the rest core map
 		for (int i = 1; i < (int) npages; i++) {
@@ -168,6 +171,9 @@ free_kpages(vaddr_t addr)
 				break;
 			}
 		}
+
+		int test_index = (PADDR_TO_KVADDR(addr) - addr_new_lo) / PAGE_SIZE;
+		KASSERT(test==init_state);
 		//free that address and any contiguous frames
 		int pagenum = coremap[init_state].otherFrameNum;
 		for (int i = 0; i < pagenum; i++) {
