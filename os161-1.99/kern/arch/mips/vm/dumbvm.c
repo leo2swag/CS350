@@ -152,7 +152,7 @@ getppages(unsigned long npages)
 		//KASSERT(test==addr);
 		
 		//update the rest core map with more than 1 allocation
-		if (int_int_npages > 1) {
+		if (int_npages > 1) {
 			int value = int_npages;
 			for (int i = 0; i < int_npages; i++) {
 				coremap[found+i].alloc_num = value;
