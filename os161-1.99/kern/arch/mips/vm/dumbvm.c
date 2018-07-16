@@ -110,18 +110,18 @@ getppages(unsigned long npages)
 	
 	int index = 0;
 	int counter = 0;
-	int npages = (int) npages;
+	int int_npages = (int) npages;
 	if (kern_call == false) { //not the kern_call
 		for (int i = 0; i < numofFrame; i++) {
 			if (coremap[i].alloc_num == 0) { //not in use
 				counter = counter + 1;
-				if (counter == npages) {
+				if (counter == int_npages) {
 					index = i;
 					break;
 				}
 			} else { //current use
 				counter = 0;
-				if (counter == npages) {
+				if (counter == int_npages) {
 					index = i;
 					break;
 				}
@@ -129,9 +129,9 @@ getppages(unsigned long npages)
 		}
 
 		//return the addr
-		int found = index - npages + 1;
+		int found = index - int_npages + 1;
 		//update the coremap with given index
-		coremap[found].alloc_num = npages;
+		coremap[found].alloc_num = int_npages;
 
 		//offset + index * pagesize
 		addr = addr_new_lo + found * PAGE_SIZE;
@@ -151,8 +151,8 @@ getppages(unsigned long npages)
 		//KASSERT(test==addr);
 		
 		//update the rest core map
-		for (int i = 1; i < npages; i++) {
-			coremap[found+i].alloc_num = npages;
+		for (int i = 1; i < int_npages; i++) {
+			coremap[found+i].alloc_num = int_npages;
 		}
 
 	} else {
