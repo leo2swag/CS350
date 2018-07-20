@@ -301,18 +301,18 @@ vm_fault(int faulttype, vaddr_t faultaddress)
 	stacktop = USERSTACK;
 
 	if (faultaddress >= vbase1 && faultaddress < vtop1) {
-		int pt1_index = (faultaddress - vbase1) / PAGE_SIZE;
+		vaddr_t pt1_index = (faultaddress - vbase1) / PAGE_SIZE;
 		paddr = as->as_pagetable_base1[pt1_index];
 		#if OPT_A3
 			if_read_only = true;
 		#endif
 	}
 	else if (faultaddress >= vbase2 && faultaddress < vtop2) {
-		int pt2_index = (faultaddress - vbase2) / PAGE_SIZE;
+		vaddr_t pt2_index = (faultaddress - vbase2) / PAGE_SIZE;
 		paddr = as->as_pagetable_base2[pt2_index];
 	}
 	else if (faultaddress >= stackbase && faultaddress < stacktop) {
-		int pts_index = (faultaddress - stackbase) / PAGE_SIZE;
+		vaddr_t pts_index = (faultaddress - stackbase) / PAGE_SIZE;
 		paddr = as->as_pagetable_stackpbase[pts_index];
 	}
 	else {
