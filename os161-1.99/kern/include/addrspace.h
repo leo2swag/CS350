@@ -36,7 +36,7 @@
 
 
 #include <vm.h>
-#include <opt-A3.h>
+
 struct vnode;
 
 
@@ -47,20 +47,33 @@ struct vnode;
  * You write this.
  */
 
+
+struct pageEntiry
+{
+    paddr_t pframebase;
+};
+
+
 struct addrspace {
-  vaddr_t as_vbase1;
-  paddr_t as_pbase1;
-  size_t as_npages1;
-  vaddr_t as_vbase2;
-  paddr_t as_pbase2;
-  size_t as_npages2;
-  paddr_t as_stackpbase;
-  #if OPT_A3
-    bool hasloaded;
-    //paddr_t * as_pagetable_base1;
-    //paddr_t * as_pagetable_base2;
-    //paddr_t * as_pagetable_stackpbase;
-  #endif
+    bool as_elfLoaded;
+
+    //paddr_t as_pbase1;
+
+    vaddr_t as_vbase1;
+    size_t as_npages1;
+
+    struct pageEntiry *as_ptable1;
+
+    //paddr_t as_pbase2;
+
+    vaddr_t as_vbase2;
+    size_t as_npages2;
+    struct pageEntiry *as_ptable2;
+
+    //paddr_t as_stackpbase;
+
+    struct pageEntiry *as_ptableStack;
+    
 };
 
 /*
