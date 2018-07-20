@@ -389,19 +389,19 @@ void
 as_destroy(struct addrspace *as)
 {
 #if OPT_A3
-	for (int i = 0; i < as->as_npages1; i++) {
+	for (size_t i = 0; i < as->as_npages1; i++) {
 		free_kpages(PADDR_TO_KVADDR(as->as_pagetable_base1[i]));
 	}
-	for (int i = 0; i < as->as_npages2; i++) {
+	for (size_t i = 0; i < as->as_npages2; i++) {
 		free_kpages(PADDR_TO_KVADDR(as->as_pagetable_base2[i]));
 	}
-	for (int i = 0; i < DUMBVM_STACKPAGES; i++) {
+	for (size_t i = 0; i < DUMBVM_STACKPAGES; i++) {
 		free_kpages(PADDR_TO_KVADDR(as->as_pagetable_stackpbase[i]));
 	}
 
-	free_kpages((vaddr_t) as->as_pagetable_base1));
-	free_kpages((vaddr_t) as->as_pagetable_base2));
-	free_kpages((vaddr_t) as->as_pagetable_stackpbase));
+	free_kpages((vaddr_t) as->as_pagetable_base1);
+	free_kpages((vaddr_t) as->as_pagetable_base2);
+	free_kpages((vaddr_t) as->as_pagetable_stackpbase);
 #else
 	kfree(as);
 #endif
@@ -509,17 +509,17 @@ as_prepare_load(struct addrspace *as)
 
 
 	//npages 1 init
-	for(int i = 0; i < as->as_npages1; i++) {
+	for(size_t i = 0; i < as->as_npages1; i++) {
 		as->as_pagetable_base1[i] = getppages(1);
-		as_zero_region(as->as_npages1[i], 1);
+		as_zero_region(as->as_pagetable_base1[i], 1);
 	}
 	
-	for(int i = 0; i < as->as_npages2; i++) {
+	for(size_t i = 0; i < as->as_npages2; i++) {
 		as->as_pagetable_base2[i] = getppages(1);
-		as_zero_region(as->as_npages2[i], 1);
+		as_zero_region(as->as_pagetable_base2[i], 1);
 	}
 
-	for(int i = 0; i < DUMBVM_STACKPAGES; i++) {
+	for(size_t i = 0; i < DUMBVM_STACKPAGES; i++) {
 		as->as_pagetable_stackpbase[i] = getppages(1);
 		as_zero_region(as->as_pagetable_stackpbase[i], 1);
 	}
@@ -536,7 +536,7 @@ as_complete_load(struct addrspace *as)
 {
 	#if OPT_A3
 		as->hasloaded = true;
-		for (i = 0; i < NUM_TLB; i++) {
+		for (int i = 0; i < NUM_TLB; i++) {
 			tlb_write(TLBHI_INVALID(i), TLBLO_INVALID(), i);
 		}
 	#else
@@ -579,19 +579,19 @@ as_copy(struct addrspace *old, struct addrspace **ret)
 	KASSERT(new->as_pagetable_base2 != NULL);
 	KASSERT(new->as_pagetable_stackpbase != NULL);
 
-	for (int i = 0; i < old->as_npages1; i++) {
+	for (size_t i = 0; i < old->as_npages1; i++) {
 	memmove((void *)PADDR_TO_KVADDR(new->as_pagetable_base1[i]),
 		(const void *)PADDR_TO_KVADDR(old->as_pagetable_base1[i]),
 		PAGE_SIZE);
 	}
 
-	for (int i = 0; i < old->as_npages2; i++) {
+	for (size_t i = 0; i < old->as_npages2; i++) {
 	memmove((void *)PADDR_TO_KVADDR(new->as_pagetable_base2[i]),
 		(const void *)PADDR_TO_KVADDR(old->as_pagetable_base2[i]),
 		PAGE_SIZE);
 	}
 
-	for (int i = 0; i < DUMBVM_STACKPAGES; i++) {
+	for (size_t i = 0; i < DUMBVM_STACKPAGES; i++) {
 	memmove((void *)PADDR_TO_KVADDR(new->as_pagetable_stackpbase[i]),
 		(const void *)PADDR_TO_KVADDR(old->as_pagetable_stackpbase[i]),
 		PAGE_SIZE);
