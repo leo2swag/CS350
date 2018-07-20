@@ -401,10 +401,11 @@ as_destroy(struct addrspace *as)
 	for (size_t i = 0; i < DUMBVM_STACKPAGES; i++) {
 		free_kpages(PADDR_TO_KVADDR(as->as_pagetable_stackpbase[i]));
 	}
-	*/
+	
 	free_kpages((vaddr_t) as->as_pagetable_base1);
 	free_kpages((vaddr_t) as->as_pagetable_base2);
 	free_kpages((vaddr_t) as->as_pagetable_stackpbase);
+	*/
 	free_kpages(PADDR_TO_KVADDR(as->as_pbase1));
 	free_kpages(PADDR_TO_KVADDR(as->as_pbase2));
 	free_kpages(PADDR_TO_KVADDR(as->as_stackpbase));
